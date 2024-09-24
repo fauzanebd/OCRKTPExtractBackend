@@ -19,12 +19,15 @@ import time
 import jwt
 from functools import wraps
 from flask_mail import Mail, Message
+from flask_bcrypt import Bcrypt
 import io
 
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
+
 
 # Configuration
 app.config['MONGO_URI'] = os.getenv('MONGODB_URI')
@@ -77,7 +80,7 @@ reader = easyocr.Reader(['id'])
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        is_development = os.getenv('NODE_ENV') == 'development'
+        is_development = os.getenv('NODE_ENV', '') == 'development'
         if is_development:
             current_user = {'username': 'developer'}
             return f(current_user, *args, **kwargs)
@@ -101,16 +104,18 @@ def signup():
     if existing_user:
         return jsonify({'message': 'Username already exists'}), 400
     
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    
     new_user = {
         'username': data['username'],
-        'password': data['password'],  # In production, hash the password
+        'password': hashed_password,
         'email': data['email'],
         'is_approved': True
     }
     result = mongo.db.users.insert_one(new_user)
     
     # # Send confirmation email to admin
-    # send_confirmation_email(data['email'])
+    # send_confirmatin_email(data['email'])
     
     return jsonify({'message': 'User registered. You can now login.'}), 201
 
@@ -119,7 +124,7 @@ def login():
     data = request.get_json()
     user = mongo.db.users.find_one({'username': data['username']})
     
-    if user and user['password'] == data['password'] and user['is_approved']:  # In production, verify hashed password
+    if user and bcrypt.check_password_hash(user['password'], data['password']) and user['is_approved']:
         token = jwt.encode({
             'user_id': str(user['_id']),
             'exp': datetime.datetime.now() + datetime.timedelta(hours=24)
@@ -174,7 +179,7 @@ def upload_image(current_user):
                 
                 cropped_img = img_cv2[y1:y2, x1:x2]
                 ocr_result = reader.readtext(cropped_img)
-                extracted_text = " ".join([detection[1] for detection in ocr_result])
+                extracted_text = " ".join([detection[1] for detection in ocr_result if detection[2] > 0.5])
                 extracted_data[class_name] = extracted_text
 
         if 'prov_kab' in extracted_data:
@@ -231,24 +236,26 @@ def upload_image(current_user):
 def save_data(current_user):
     data = request.get_json()
     
-    try:
-        ktp_data = {
-            'nik': data['nik'],
-            'nama': data['nama'],
-            'tempat_lahir': data['tempat_lahir'],
-            'tgl_lahir': data['tgl_lahir'],
-            'jenis_kelamin': data['jenis_kelamin'],
-            'alamat': data['alamat'],
-            's3_filename': data['s3_filename'],
-            'reported_by': current_user['username'],
-            'reported_at': datetime.datetime.now()
-        }
-        
-        result = mongo.db.extracted_data.insert_one(ktp_data)
-        
-        return jsonify({"message": "Data saved successfully", "id": str(result.inserted_id)}), 200
-    except Exception as e:
-        return jsonify({"error": True, "message": str(e)}), 500
+    # try:
+    ktp_data = {
+        'nik': data['nik'],
+        'nama': data['nama'],
+        'alamat': data['alamat'],
+        'prov_kab': data['prov_kab'],
+        'rt_rw': data['rt_rw'],
+        'tempat_lahir': data['tempat_lahir'],
+        'tgl_lahir': data['tgl_lahir'],
+        'pekerjaan': data['pekerjaan'],
+        's3_filename': data['s3_filename'],
+        'reported_by': current_user['username'],
+        'reported_at': datetime.datetime.now()
+    }
+    
+    result = mongo.db.extracted_data.insert_one(ktp_data)
+    
+    return jsonify({"message": "Data saved successfully", "id": str(result.inserted_id)}), 200
+    # except Exception as e:
+    #     return jsonify({"error": True, "message": str(e)}), 500
 
 # def send_confirmation_email(user_email):
 #     msg = Message('New User Registration',
