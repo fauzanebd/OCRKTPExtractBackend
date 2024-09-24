@@ -1,0 +1,5 @@
+#!/bin/bash
+# set -o errexit
+# set -o nounset
+# celery -A task_eventlet worker -Ofair -Q eventlet_queue_gcp --pool=gevent -c 5
+gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 app:app

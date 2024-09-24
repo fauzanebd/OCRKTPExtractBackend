@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 load_dotenv(".env")
-
+import logging
 import os
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
@@ -21,6 +21,8 @@ from functools import wraps
 from flask_mail import Mail, Message
 import io
 
+# logging.basicConfig(level=logging.DEBUG)
+# logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -35,7 +37,18 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['ADMIN_EMAIL'] = os.getenv('ADMIN_EMAIL')
 
 # Initialize extensions
-mongo = PyMongo(app)
+
+# logger.debug(f"MONGO_URI: {app.config['MONGO_URI']}")
+
+try:
+    mongo = PyMongo(app)
+    mongo.db.command('ping')
+    # logger.debug("MongoDB connection successful")
+    print("MongoDB connection successful")
+except Exception as e:
+    # logger.error(f"MongoDB connection failed: {str(e)}")
+    print(f"MongoDB connection failed: {str(e)}")
+    mongo = None
 mail = Mail(app)
 
 # MinIO configuration
@@ -92,14 +105,14 @@ def signup():
         'username': data['username'],
         'password': data['password'],  # In production, hash the password
         'email': data['email'],
-        'is_approved': False
+        'is_approved': True
     }
     result = mongo.db.users.insert_one(new_user)
     
-    # Send confirmation email to admin
-    send_confirmation_email(data['email'])
+    # # Send confirmation email to admin
+    # send_confirmation_email(data['email'])
     
-    return jsonify({'message': 'User registered. Waiting for admin approval.'}), 201
+    return jsonify({'message': 'User registered. You can now login.'}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -231,18 +244,18 @@ def save_data(current_user):
             'reported_at': datetime.datetime.now()
         }
         
-        result = mongo.db.ktp_data.insert_one(ktp_data)
+        result = mongo.db.extracted_data.insert_one(ktp_data)
         
         return jsonify({"message": "Data saved successfully", "id": str(result.inserted_id)}), 200
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
 
-def send_confirmation_email(user_email):
-    msg = Message('New User Registration',
-                  sender=app.config['MAIL_USERNAME'],
-                  recipients=[app.config['ADMIN_EMAIL']])
-    msg.body = f"A new user with email {user_email} has registered. Please approve their account."
-    mail.send(msg)
+# def send_confirmation_email(user_email):
+#     msg = Message('New User Registration',
+#                   sender=app.config['MAIL_USERNAME'],
+#                   recipients=[app.config['ADMIN_EMAIL']])
+#     msg.body = f"A new user with email {user_email} has registered. Please approve their account."
+#     mail.send(msg)
 
 def extract_date(date_text):
     try:
