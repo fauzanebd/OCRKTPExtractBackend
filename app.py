@@ -115,7 +115,7 @@ def signup():
     result = mongo.db.users.insert_one(new_user)
     
     # # Send confirmation email to admin
-    # send_confirmatin_email(data['email'])
+    # send_confirmation_email(data['email'])
     
     return jsonify({'message': 'User registered. You can now login.'}), 201
 
@@ -124,12 +124,15 @@ def login():
     data = request.get_json()
     user = mongo.db.users.find_one({'username': data['username']})
     
-    if user and bcrypt.check_password_hash(user['password'], data['password']) and user['is_approved']:
-        token = jwt.encode({
-            'user_id': str(user['_id']),
-            'exp': datetime.datetime.now() + datetime.timedelta(hours=24)
-        }, app.config['SECRET_KEY'], algorithm="HS256")
-        return jsonify({'token': token})
+    try:
+        if user and bcrypt.check_password_hash(user['password'], data['password']) and user['is_approved']:
+            token = jwt.encode({
+                'user_id': str(user['_id']),
+                'exp': datetime.datetime.now() + datetime.timedelta(hours=24)
+            }, app.config['SECRET_KEY'], algorithm="HS256")
+            return jsonify({'token': token})
+    except ValueError:
+        return jsonify({'message': 'Failed to login'}), 500
     
     return jsonify({'message': 'Invalid credentials or user not approved'}), 401
 
@@ -146,15 +149,8 @@ def upload_image(current_user):
     try:
         # Save image to S3
         file_data = file.read()
-        file_size = len(file_data)
-        s3_filename = f"ktp_{current_user['username']}_{int(time.time())}.jpg"
-        minio_client.put_object(
-            BUCKET_NAME, s3_filename, io.BytesIO(file_data), file_size
-        )
         
-        # Get image from MinIO
-        response = minio_client.get_object(BUCKET_NAME, s3_filename)
-        img = Image.open(io.BytesIO(response.read()))
+        img = Image.open(io.BytesIO(file_data))
         
         # Image preprocessing
         img = img.convert('RGB')
@@ -216,6 +212,15 @@ def upload_image(current_user):
 
         if 'nik' in extracted_data:
             extracted_data['nik'] = re.sub(r'\D', '', extracted_data['nik'])
+
+        file_size = len(file_data)
+        s3_filename = f"ktp_nik_{extracted_data['nik']}_{datetime.datetime.now().strftime('%Y%m%d')}.jpg"
+        minio_client.put_object(
+            BUCKET_NAME, s3_filename, io.BytesIO(file_data), file_size
+        )
+        file.close()
+        # Get image from MinIO
+        response = minio_client.get_object(BUCKET_NAME, s3_filename)
         
 
         response = {
