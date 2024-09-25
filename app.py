@@ -236,6 +236,9 @@ def upload_image(current_user):
         # Get image from MinIO
         response = minio_client.get_object(BUCKET_NAME, s3_filename)
 
+        # add phone number just for placeholder
+        extracted_data['phone_number'] = ''
+
         response = {
             "error": False,
             "message": "OCR Success!",
