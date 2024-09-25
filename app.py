@@ -269,6 +269,7 @@ def save_data(current_user):
             'tgl_lahir': data['tgl_lahir'],
             'pekerjaan': data['pekerjaan'],
             's3_filename': data['s3_filename'],
+            'phone_number': data.get('phone_number', ''),
             'reported_by': current_user['username'],
             'reported_at': datetime.datetime.now()
         }
