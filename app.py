@@ -219,7 +219,8 @@ def upload_image(current_user):
             extracted_data['nik'] = re.sub(r'\D', '', extracted_data['nik'])
 
         file_size = len(file_data)
-        s3_filename = f"ktp_nik_{extracted_data['nik']}_{datetime.datetime.now().strftime('%Y%m%d')}.jpg"
+        random_string = generate_random_string(12)
+        s3_filename = f"ktp_nik_{extracted_data['nik']}_{random_string}.jpg"
         minio_client.put_object(
             BUCKET_NAME, s3_filename, io.BytesIO(file_data), file_size
         )
@@ -239,7 +240,10 @@ def upload_image(current_user):
         return jsonify({"error": True, "message": f"MinIO Error: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
-    
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 @app.route('/save_data', methods=['POST'])
 @token_required
