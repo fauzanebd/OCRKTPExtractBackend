@@ -133,11 +133,17 @@ def login():
     
     try:
         if user and bcrypt.check_password_hash(user['password'], data['password']) and user['is_approved']:
+            role = user['role'] if 'role' in user else 'user'
             token = jwt.encode({
                 'user_id': str(user['_id']),
-                'exp': datetime.datetime.now() + datetime.timedelta(hours=24)
+                'exp': datetime.datetime.now() + datetime.timedelta(hours=24),
+                'role': role
             }, app.config['SECRET_KEY'], algorithm="HS256")
-            return jsonify({'token': token})
+            return jsonify({
+                'user_id': str(user['_id']),
+                'token': token,
+                'role': role
+            })
     except ValueError:
         return jsonify({'message': 'Failed to login'}), 500
     
