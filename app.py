@@ -104,27 +104,31 @@ def token_required(f):
     return decorated
 
 # For now, we dont need signup mechanism
-# @app.route('/signup', methods=['POST'])
-# def signup():
-#     data = request.get_json()
-#     existing_user = mongo.db.users.find_one({'username': data['username']})
-#     if existing_user:
-#         return jsonify({'message': 'Username already exists'}), 400
+@app.route('/signup', methods=['POST'])
+@token_required
+def signup(current_user):
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 401
+    data = request.get_json()
+    existing_user = mongo.db.users.find_one({'username': data['username']})
+    if existing_user:
+        return jsonify({'message': 'Username already exists'}), 400
     
-#     hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     
-#     new_user = {
-#         'username': data['username'],
-#         'password': hashed_password,
-#         'email': data['email'],
-#         'is_approved': True
-#     }
-#     result = mongo.db.users.insert_one(new_user)
+    new_user = {
+        'username': data['username'],
+        'password': hashed_password,
+        'email': data['email'],
+        'is_approved': True,
+        'role': data['role'] if 'role' in data else 'user'
+    }
+    result = mongo.db.users.insert_one(new_user)
     
-#     # # Send confirmation email to admin
-#     # send_confirmation_email(data['email'])
+    # # Send confirmation email to admin
+    # send_confirmation_email(data['email'])
     
-#     return jsonify({'message': 'User registered. You can now login.'}), 201
+    return jsonify({'message': 'User registered. You can now login.'}), 201
 
 @app.route('/login', methods=['POST'])
 def login():
