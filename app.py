@@ -277,6 +277,11 @@ def save_data(current_user):
             'reported_at': datetime.datetime.now()
         }
         
+        # check if the data already exists
+        existing_data = mongo.db.extracted_data.find_one({'nik': data['nik']})
+        if existing_data:
+            return jsonify({"error": True, "message": "Data already exists"}), 400
+        
         result = mongo.db.extracted_data.insert_one(ktp_data)
         
         return jsonify({"message": "Data saved successfully", "id": str(result.inserted_id)}), 200
