@@ -3,3 +3,7 @@ __pycache__/
 ocrenv/
 env/
 ktp2.png
+.idea/
+.vscode/
+.idea
+.vscode
