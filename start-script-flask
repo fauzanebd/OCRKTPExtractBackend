@@ -1,1 +1,7 @@
-gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 app:app
+#!/bin/bash
+
+# Run database migrations
+flask db upgrade
+
+# Start gunicorn
+gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 run:app

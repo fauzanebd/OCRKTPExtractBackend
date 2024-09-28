@@ -1,5 +1,14 @@
-import datetime
+
+
+import string
+import random
 import re
+import datetime
+from cryptography.fernet import Fernet
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 def extract_date(date_text):
@@ -35,3 +44,11 @@ def extract_date(date_text):
             except ValueError:
                 return None
     return None
+
+def encrypt_text(text, encryption_key):
+    cipher_suite = Fernet(encryption_key)
+    return cipher_suite.encrypt(text.encode()).decode()
+
+def decrypt_text(text, encryption_key):
+    cipher_suite = Fernet(encryption_key)
+    return cipher_suite.decrypt(text.encode()).decode()
