@@ -1,4 +1,5 @@
 
+import logging
 from flask import Blueprint, request, jsonify
 from app.models.extracted_data import ExtractedData
 from app import db
@@ -51,6 +52,7 @@ def save_data(current_user):
     data = request.get_json()
 
     encrypted_nik = encrypt_text(data['nik'], current_user.get_fernet_key())
+    logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
     # try:
     ktp_data = ExtractedData(
@@ -79,28 +81,30 @@ def save_data(current_user):
 @bp.route('/entries', methods=['GET'])
 @token_required
 def check_entries(current_user):
-    try:
-        entries = ExtractedData.query.filter_by(reported_by=current_user.username).all()
-        entries_list = [
-            {
-                'id': entry.id,
-                'nik': decrypt_text(entry.nik, current_user.get_fernet_key()),
-                'nama': entry.nama,
-                'alamat': entry.alamat,
-                'prov_kab': entry.prov_kab,
-                'rt_rw': entry.rt_rw,
-                'tempat_lahir': entry.tempat_lahir,
-                'tgl_lahir': entry.tgl_lahir.isoformat(),
-                'pekerjaan': entry.pekerjaan,
-                's3_filename': entry.s3_filename,
-                'phone_number': entry.phone_number,
-                'reported_at': entry.reported_at.isoformat()
-            }
-            for entry in entries
-        ]
-        return jsonify({"entries": entries_list}), 200
-    except Exception as e:
-        return jsonify({"error": True, "message": str(e)}), 500
+    # try:
+    entries = ExtractedData.query.filter_by(reported_by=current_user.username).all()
+    entries_list = [
+        {
+            'id': entry.id,
+            'nik': decrypt_text(entry.nik, current_user.get_fernet_key()),
+            'nama': entry.nama,
+            'alamat': entry.alamat,
+            'prov_kab': entry.prov_kab,
+            'rt_rw': entry.rt_rw,
+            'tempat_lahir': entry.tempat_lahir,
+            'tgl_lahir': entry.tgl_lahir.isoformat(),
+            'pekerjaan': entry.pekerjaan,
+            's3_filename': entry.s3_filename,
+            'phone_number': entry.phone_number,
+            'reported_at': entry.reported_at.isoformat()
+        }
+        for entry in entries
+    ]
+    for entry in entries_list:
+        logging.debug(f"Retrieved and decrypted NIK: {entry['nik'][:10]}...")
+    return jsonify({"entries": entries_list}), 200
+    # except Exception as e:
+    #     return jsonify({"error": True, "message": str(e)}), 500
     
 @bp.route('/update_data', methods=['POST'])
 @token_required

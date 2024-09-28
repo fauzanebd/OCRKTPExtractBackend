@@ -4,7 +4,7 @@ from app import db
 
 class ExtractedData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nik = db.Column(db.String(16), unique=True, nullable=False)
+    nik = db.Column(db.String(255), unique=True, nullable=False)
     nama = db.Column(db.String(100), nullable=False)
     alamat = db.Column(db.Text, nullable=False)
     prov_kab = db.Column(db.String(100), nullable=False)
