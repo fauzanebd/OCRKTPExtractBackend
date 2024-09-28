@@ -16,7 +16,7 @@ build:
 run:
 	docker run -d \
 		--name $(CONTAINER_NAME) \
-		-p 5000:5000 \
+		-p 8080:8080 \
 		--env-file .env \
 		-e FLASK_ENV=production \
 		-v $(PWD)/logs:/app/logs \
