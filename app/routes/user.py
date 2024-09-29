@@ -70,25 +70,28 @@ def get_user_subordinate(current_user):
         if q:
             query = query.filter(User.name.ilike(f"%{q}%"))
         if province_code:
-            if hierarchy > 5 and current_user.province_code != province_code:
+            if hierarchy > 6 and current_user.province_code != province_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.province_code == province_code)
         if city_code:
-            if hierarchy > 4 and current_user.city_code != city_code:
+            if hierarchy > 5 and current_user.city_code != city_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.city_code == city_code)
         if subdistrict_code:
-            if hierarchy > 3 and current_user.subdistrict_code != subdistrict_code:
+            if hierarchy > 4 and current_user.subdistrict_code != subdistrict_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.subdistrict_code == subdistrict_code)
         if ward_code:
-            if hierarchy > 2 and current_user.ward_code != ward_code:
+            if hierarchy > 3 and current_user.ward_code != ward_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.ward_code == ward_code)
         if village_code:
-            if hierarchy > 1 and current_user.village_code != village_code:
+            if hierarchy > 2 and current_user.village_code != village_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.village_code == village_code)
+            
+        if current_user.role == 'enumerator' or hierarchy == 1:
+            return jsonify({'message': 'Unauthorized'}), 401
             
         users = query.limit(limit).offset(offset).all()
         

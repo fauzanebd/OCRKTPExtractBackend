@@ -76,15 +76,15 @@ class User(db.Model):
         }
         
     def get_hierarchy_value(self):
-        if self.province_code:
-            return 5
-        elif self.city_code:
-            return 4
-        elif self.subdistrict_code:
-            return 3
-        elif self.ward_code:
-            return 2
-        elif self.village_code:
-            return 1
-        else:
+        if self.province_code is None:
             return 6
+        elif self.city_code is None:
+            return 5
+        elif self.subdistrict_code is None:
+            return 4
+        elif self.ward_code is None:
+            return 3
+        elif self.village_code is None:
+            return 2
+        else:
+            return 1
