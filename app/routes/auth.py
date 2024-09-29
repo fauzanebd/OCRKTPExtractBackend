@@ -81,6 +81,9 @@ def login():
     try:
         data = request.get_json()
         user = User.query.filter_by(username=data['username']).first()
+        
+        if not user:
+            return jsonify({'message': 'Invalid credentials'}), 401
 
         locations = user.get_user_locations()
         province = Province.query.filter_by(code=locations['province_code']).first()

@@ -36,7 +36,7 @@ def upload_image(current_user):
         
         # Upload to S3
         if s3_service.s3_service.upload_file(file_data, s3_filename):
-            data_pemilih['s3_filename'] = s3_filename
+            data_pemilih['s3_file'] = s3_filename
             return jsonify({
                 "error": False,
                 "message": "OCR Success!",

@@ -1,13 +1,17 @@
+import base64
 import easyocr
 import cv2
+import anthropic
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 import io
 import os
 import re, textdistance
 from ultralytics import YOLO
+from app import db
 
 from app.utils.helpers import extract_date
+from app.models.model_used import ModelUsed
 
 class OCRService:
     _instance = None
@@ -39,13 +43,104 @@ class OCRService:
         enhancer = ImageEnhance.Contrast(img_pil)
         img_pil = enhancer.enhance(2)
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+    
+    def extract_ktp_data_claude(self, image_data, user_id):
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        client = anthropic.Anthropic(
+            api_key='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'
+        )
+        message = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/png",
+                                "data": image_base64
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": f"""
+                                Extract the following information from the KTP (Kartu Tanda Penduduk) image and return it in JSON format snake_case:
+                                - nik
+                                - name 
+                                - birth date
+                                - gender (L or P)
+                                - address
+                            """
+                        }
+                    ]
+                }
+            ]
+        )
+        res = message.content[0].text
+        # convert the response to a dictionary
+        data = eval(res)
+        return data
+        
 
     def extract_ktp_data(self, image_data, user_id):
         preprocessed_image = self.preprocess_image(image_data)
-
+        model = int(os.getenv('MODEL', 1))
+        client_code = os.getenv('CLIENT_CODE')
+        
+        if model == 2:
+            res = self.extract_ktp_data_claude(image_data, user_id)
+            province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(res['nik'])
+            
+            # insert model used
+            model_used = ModelUsed(
+                user_id=user_id,
+                model_id=2,
+            )
+            
+            db.session.add(model_used)
+            db.session.commit()
+            
+            
+            return {
+                'client_code': client_code,
+                'user_id': user_id,
+                'model_id': 1,
+                'province_code': province_code,
+                'city_code': city_code,
+                'subdistrict_code': subdistrict_code,
+                'ward_code': None,
+                'village_code': None,
+                's3_file': '',
+                'nik': res['nik'],
+                'name': res['name'].title(),
+                'birth_date': res['birth_date'],
+                'gender': res['gender'],
+                'address': res['address'],
+                'no_phone': '',
+                'no_tps': '',
+                'is_party_member': False,
+                'relation_to_candidate': '',
+                'confirmation_status': '',
+                'category': '',
+                'positioning_to_candidate': '',
+                'expectation_to_candidate': ''
+            }
+    
         results = self.model.predict(preprocessed_image, imgsz=(480, 640), iou=0.7, conf=0.5)
 
+        # insert model used
+        model_used = ModelUsed(
+            user_id=user_id,
+            model_id=1,
+        )
         
+        db.session.add(model_used)
+        db.session.commit()
+            
         data_pemilih = {}
         for result in results:
             for box in result.boxes:
@@ -109,8 +204,7 @@ class OCRService:
         for old_key, new_key in change_keys.items():
             if old_key in data_pemilih:
                 data_pemilih[new_key] = data_pemilih.pop(old_key)
-
-        client_code = os.getenv('CLIENT_CODE')
+                
         return {
             'client_code': client_code,
             'user_id': user_id,
