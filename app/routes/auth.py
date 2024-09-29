@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.user import User
+from app.models.locations import Province, City, Subdistrict, Ward, Village
 from app import db
 import jwt
 import os
@@ -76,6 +77,13 @@ def login():
     data = request.get_json()
     user = User.query.filter_by(username=data['username']).first()
 
+    locations = user.get_user_locations()
+    province = Province.query.filter_by(code=locations['province_code']).first()
+    city = City.query.filter_by(code=locations['city_code']).first()
+    subdistrict = Subdistrict.query.filter_by(code=locations['subdistrict_code']).first()
+    ward = Ward.query.filter_by(code=locations['ward_code']).first()
+    village = Village.query.filter_by(code=locations['village_code']).first()
+
     if user and check_password_hash(user.password, data['password']):
         token = jwt.encode({
             'user_id': user.id,
@@ -87,6 +95,11 @@ def login():
             'token': token,
             'role': user.role,
             'hierarchy': user.get_user_hierarchy(),
+            'province': province.name if province else None,
+            'city': city.name if city else None,
+            'subdistrict': subdistrict.name if subdistrict else None,
+            'ward': ward.name if ward else None,
+            'village': village.name if village else None
         })
 
     return jsonify({'message': 'Invalid credentials or user not approved'}), 401
