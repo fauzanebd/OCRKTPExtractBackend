@@ -85,7 +85,8 @@ def login():
         return jsonify({
             'user_id': user.id,
             'token': token,
-            'role': user.role
+            'role': user.role,
+            'hierarchy': user.get_user_hierarchy(),
         })
 
     return jsonify({'message': 'Invalid credentials or user not approved'}), 401

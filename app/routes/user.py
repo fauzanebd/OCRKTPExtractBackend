@@ -49,3 +49,51 @@ def create_user(current_user):
     except Exception as e:
         current_app.logger.error(f"Error creating user: {str(e)}")
         return jsonify({'message': 'Error creating user'}), 500
+
+@bp.route('/users/get-subordinate', methods=['GET'])
+@token_required    
+def get_user_subordinate(current_user):
+    try:
+        q = request.args.get('q')
+        limit = request.args.get('limit', 10)
+        page = request.args.get('page', 1)
+        offset = (int(page) - 1) * int(limit)
+        province_code = request.args.get('province_code')
+        city_code = request.args.get('city_code')
+        subdistrict_code = request.args.get('subdistrict_code')
+        ward_code = request.args.get('ward_code')
+        village_code = request.args.get('village_code')
+        
+        query = User.query
+        hierarchy = current_user.get_hierarchy_value()
+        
+        if q:
+            query = query.filter(User.name.ilike(f"%{q}%"))
+        if province_code:
+            if hierarchy > 5 and current_user.province_code != province_code:
+                return jsonify({'message': 'Unauthorized'}), 401
+            query = query.filter(User.province_code == province_code)
+        if city_code:
+            if hierarchy > 4 and current_user.city_code != city_code:
+                return jsonify({'message': 'Unauthorized'}), 401
+            query = query.filter(User.city_code == city_code)
+        if subdistrict_code:
+            if hierarchy > 3 and current_user.subdistrict_code != subdistrict_code:
+                return jsonify({'message': 'Unauthorized'}), 401
+            query = query.filter(User.subdistrict_code == subdistrict_code)
+        if ward_code:
+            if hierarchy > 2 and current_user.ward_code != ward_code:
+                return jsonify({'message': 'Unauthorized'}), 401
+            query = query.filter(User.ward_code == ward_code)
+        if village_code:
+            if hierarchy > 1 and current_user.village_code != village_code:
+                return jsonify({'message': 'Unauthorized'}), 401
+            query = query.filter(User.village_code == village_code)
+            
+        users = query.limit(limit).offset(offset).all()
+        
+        return jsonify([user.to_dict() for user in users]), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting user's subordinate: {str(e)}")
+        return jsonify({'message': 'Error getting user\'s subordinate'}), 500

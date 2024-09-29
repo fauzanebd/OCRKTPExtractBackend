@@ -31,3 +31,60 @@ class User(db.Model):
 
     # def get_fernet_key(self):
     #     return self.fernet_ke
+    
+    def get_user_hierarchy(self):
+        if self.province_code:
+            return 'province'
+        elif self.city_code:
+            return 'city'
+        elif self.subdistrict_code:
+            return 'subdistrict'
+        elif self.ward_code:
+            return 'ward'
+        elif self.village_code:
+            return 'village'
+        else:
+            return 'nasional'
+    
+    def get_user_locations(self):
+        return {
+            'province_code': self.province_code,
+            'city_code': self.city_code,
+            'subdistrict_code': self.subdistrict_code,
+            'ward_code': self.ward_code,
+            'village_code': self.village_code
+        }
+        
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'client_code': self.client_code,
+            'avatar': self.avatar,
+            'name': self.name,
+            'username': self.username,
+            'no_phone': self.no_phone,
+            'nasional': self.nasional,
+            'province_code': self.province_code,
+            'city_code': self.city_code,
+            'subdistrict_code': self.subdistrict_code,
+            'ward_code': self.ward_code,
+            'village_code': self.village_code,
+            'is_enumerator': self.is_enumerator,
+            'role': self.role,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
+        
+    def get_hierarchy_value(self):
+        if self.province_code:
+            return 5
+        elif self.city_code:
+            return 4
+        elif self.subdistrict_code:
+            return 3
+        elif self.ward_code:
+            return 2
+        elif self.village_code:
+            return 1
+        else:
+            return 6
