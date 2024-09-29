@@ -45,7 +45,7 @@ class OCRService:
         results = self.model.predict(preprocessed_image, imgsz=(480, 640), iou=0.7, conf=0.5)
 
         
-        extracted_data = {}
+        data_pemilih = {}
         for result in results:
             for box in result.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
@@ -54,10 +54,10 @@ class OCRService:
                 cropped_img = preprocessed_image[y1:y2, x1:x2]
                 ocr_result = self.reader.readtext(cropped_img)
                 extracted_text = " ".join([detection[1] for detection in ocr_result if detection[2] > 0.5])
-                extracted_data[class_name] = extracted_text
+                data_pemilih[class_name] = extracted_text
 
-        if 'prov_kab' in extracted_data:
-            prov_kab = extracted_data['prov_kab']
+        if 'prov_kab' in data_pemilih:
+            prov_kab = data_pemilih['prov_kab']
             if "KOTA" in prov_kab:
                 provinsi, kabupaten = prov_kab.split("KOTA", 1)
                 kabupaten = "KOTA " + kabupaten.strip()
@@ -73,24 +73,24 @@ class OCRService:
                 kabupaten = ""
             provinsi = provinsi.strip()
 
-        if 'jk' in extracted_data:
-            datatext = extracted_data['jk']
+        if 'jk' in data_pemilih:
+            datatext = data_pemilih['jk']
             if textdistance.levenshtein(datatext.upper(), "LAKI-LAKI") < textdistance.levenshtein(datatext.upper(), "PEREMPUAN"):
-                extracted_data['jk'] = "LAKI-LAKI"
+                data_pemilih['jk'] = "LAKI-LAKI"
             else:
-                extracted_data['jk'] = "PEREMPUAN"
+                data_pemilih['jk'] = "PEREMPUAN"
 
-        if 'ttl' in extracted_data:
-            ttl = extracted_data['ttl']
+        if 'ttl' in data_pemilih:
+            ttl = data_pemilih['ttl']
             match = re.search(r'\d', ttl)
             if match:
                 index = match.start()
-                extracted_data['tempat_lahir'] = ttl[:index].strip()
-                extracted_data['tgl_lahir'] = extract_date(ttl[index:].strip())
+                data_pemilih['tempat_lahir'] = ttl[:index].strip()
+                data_pemilih['tgl_lahir'] = extract_date(ttl[index:].strip())
 
-        if 'nik' in extracted_data:
-            extracted_data['nik'] = re.sub(r'\D', '', extracted_data['nik'])
+        if 'nik' in data_pemilih:
+            data_pemilih['nik'] = re.sub(r'\D', '', data_pemilih['nik'])
 
-        return extracted_data
+        return data_pemilih
 
 ocr_service = OCRService()

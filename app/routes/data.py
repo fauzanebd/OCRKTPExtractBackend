@@ -1,7 +1,7 @@
 
 import logging
 from flask import Blueprint, request, jsonify
-from app.models.extracted_data import ExtractedData
+from app.models.data_pemilih import DataPemilih
 from app import db
 import jwt
 from app.services import ocr_service, s3_service
@@ -26,19 +26,19 @@ def upload_image():
         file_data = file.read()
         
         # Extract data using OCR
-        extracted_data = ocr_service.ocr_service.extract_ktp_data(file_data)
+        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data)
         
         # Generate a unique filename
         random_string = generate_random_string(12)
-        s3_filename = f"ktp_nik_{extracted_data.get('nik', 'unknown')}_{random_string}.jpg"
+        s3_filename = f"ktp_nik_{data_pemilih.get('nik', 'unknown')}_{random_string}.jpg"
         
         # Upload to S3
         if s3_service.s3_service.upload_file(file_data, s3_filename):
-            extracted_data['s3_filename'] = s3_filename
+            data_pemilih['s3_filename'] = s3_filename
             return jsonify({
                 "error": False,
                 "message": "OCR Success!",
-                "data": extracted_data
+                "data": data_pemilih
             }), 200
         else:
             return jsonify({"error": True, "message": "Failed to upload file to S3"}), 500
@@ -55,7 +55,7 @@ def save_data(current_user):
     logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
     try:
-        ktp_data = ExtractedData(
+        ktp_data = DataPemilih(
             nik=encrypted_nik,
             nama=data['nama'],
             alamat=data['alamat'],
@@ -82,7 +82,7 @@ def save_data(current_user):
 @token_required
 def check_entries(current_user):
     try:
-        entries = ExtractedData.query.filter_by(reported_by=current_user.username).all()
+        entries = DataPemilih.query.filter_by(reported_by=current_user.username).all()
         entries_list = [
             {
                 'id': entry.id,
@@ -117,7 +117,7 @@ def update_data(current_user):
         if not doc_id:
             return jsonify({"error": True, "message": "No id provided"}), 400
 
-        entry = ExtractedData.query.filter_by(id=doc_id, reported_by=current_user.username).first()
+        entry = DataPemilih.query.filter_by(id=doc_id, reported_by=current_user.username).first()
 
         if not entry:
             return jsonify({"error": True, "message": "No matching document found"}), 404
