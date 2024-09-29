@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from app.models.data_pemilih import DataPemilih
 from app import db
 import jwt
+import os
+from datetime import datetime
 from app.services import ocr_service, s3_service
 from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text
 from app.routes.auth import token_required
@@ -52,22 +54,35 @@ def upload_image(current_user):
 def save_data(current_user):
     data = request.get_json()
 
-    encrypted_nik = encrypt_text(data['nik'], current_user.get_fernet_key())
+    fernet_key = os.getenv('FERNET_KEY')
+    encrypted_nik = encrypt_text(data['nik'], fernet_key)
     logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
     try:
+        client_code = os.getenv('CLIENT_CODE')
         ktp_data = DataPemilih(
+            client_code=client_code,
+            user_id=current_user.id,
+            model_id=data.get('model_id', 1),
+            province_code=data.get('province_code', None),
+            city_code=data.get('city_code', None),
+            subdistrict_code=data.get('subdistrict_code', None),
+            ward_code=data.get('ward_code', None),
+            village_code=data.get('village_code', None),
+            s3_file=data.get('s3_file', ''),
             nik=encrypted_nik,
-            nama=data['nama'],
-            alamat=data['alamat'],
-            prov_kab=data['prov_kab'],
-            rt_rw=data['rt_rw'],
-            tempat_lahir=data['tempat_lahir'],
-            tgl_lahir=datetime.strptime(data['tgl_lahir'], '%Y-%m-%d').date(),
-            pekerjaan=data['pekerjaan'],
-            s3_filename=data['s3_filename'],
-            phone_number=data.get('phone_number', ''),
-            reported_by=current_user.username
+            name=data.get('name', ''),
+            birth_date=data.get('birth_date', datetime.now().strftime('%Y-%m-%d')),
+            gender=data.get('gender', 'L'),
+            address=data.get('address', 'asdasd'),
+            no_phone=data.get('no_phone', ''),
+            no_tps=data.get('no_tps', ''),
+            is_party_member=data.get('is_party_member', False),
+            relation_to_candidate=data.get('relation_to_candidate', ''),
+            confirmation_status=data.get('confirmation_status', ''),
+            category=data.get('category', ''),
+            positioning_to_candidate=data.get('positioning_to_candidate', ''),
+            expectation_to_candidate=data.get('expectation_to_candidate', '')
         )
 
         db.session.add(ktp_data)
