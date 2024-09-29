@@ -6,7 +6,7 @@ from app import db
 import os
 from datetime import datetime
 from app.services import ocr_service, s3_service
-from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response
+from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response, success_response
 from app.routes.auth import token_required
 from datetime import datetime, timedelta
 from functools import wraps
@@ -152,22 +152,38 @@ def update_data(current_user):
     data = request.get_json()
     
     try:
-        doc_id = data.pop('id', None)
+        data_pemilih = DataPemilih.query.get(data['id'])
+        if not data_pemilih:
+            return jsonify({"error": True, "message": "Data not found"}), 404
         
-        if not doc_id:
-            return jsonify({"error": True, "message": "No id provided"}), 400
-
-        entry = DataPemilih.query.filter_by(id=doc_id, reported_by=current_user.username).first()
-
-        if not entry:
-            return jsonify({"error": True, "message": "No matching document found"}), 404
-
-        for key, value in data.items():
-            setattr(entry, key, value)
-
+        encrypted_nik = data_pemilih.nik
+        if data.get('nik'):
+            fernet_key = os.getenv('FERNET_KEY')
+            encrypted_nik = encrypt_text(data['nik'], fernet_key)
+        
+        data_pemilih.name = data.get('name', data_pemilih.name)
+        data_pemilih.birth_date = data.get('birth_date', data_pemilih.birth_date)
+        data_pemilih.province_code = data.get('province_code', data_pemilih.province_code)
+        data_pemilih.city_code = data.get('city_code', data_pemilih.city_code)
+        data_pemilih.subdistrict_code = data.get('subdistrict_code', data_pemilih.subdistrict_code)
+        data_pemilih.ward_code = data.get('ward_code', data_pemilih.ward_code)
+        data_pemilih.village_code = data.get('village_code', data_pemilih.village_code)
+        data_pemilih.nik = encrypted_nik
+        data_pemilih.gender = data.get('gender', data_pemilih.gender)
+        data_pemilih.address = data.get('address', data_pemilih.address)
+        data_pemilih.no_phone = data.get('no_phone', data_pemilih.no_phone)
+        data_pemilih.no_tps = data.get('no_tps', data_pemilih.no_tps)
+        data_pemilih.is_party_member = data.get('is_party_member', data_pemilih.is_party_member)
+        data_pemilih.relation_to_candidate = data.get('relation_to_candidate', data_pemilih.relation_to_candidate)
+        data_pemilih.confirmation_status = data.get('confirmation_status', data_pemilih.confirmation_status)
+        data_pemilih.category = data.get('category', data_pemilih.category)
+        data_pemilih.positioning_to_candidate = data.get('positioning_to_candidate', data_pemilih.positioning_to_candidate)
+        data_pemilih.expectation_to_candidate = data.get('expectation_to_candidate', data_pemilih.expectation_to_candidate)
+        
         db.session.commit()
-        return jsonify({"message": "Data updated successfully"}), 200
-
+        
+        return success_response("Data updated successfully", data_pemilih.to_dict())
+    
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": True, "message": str(e)}), 500
