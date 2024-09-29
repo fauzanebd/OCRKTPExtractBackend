@@ -45,6 +45,13 @@ class OCRService:
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     
     def extract_ktp_data_claude(self, image_data, user_id):
+        ext = os.path.splitext('image.png')[1]
+        
+        image_type = 'image/png'
+        
+        if ext == '.jpg' or ext == '.jpeg':
+            image_type = 'image/jpeg'
+        
         image_base64 = base64.b64encode(image_data).decode('utf-8')
         api_key = os.getenv('ANTHROPIC_API_KEY')
         client = anthropic.Anthropic(
@@ -61,7 +68,7 @@ class OCRService:
                             "type": "image",
                             "source": {
                                 "type": "base64",
-                                "media_type": "image/png",
+                                "media_type": image_type,
                                 "data": image_base64
                             },
                         },
