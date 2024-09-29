@@ -1,5 +1,5 @@
 
-
+from flask import jsonify
 import string
 import random
 import re
@@ -52,3 +52,24 @@ def encrypt_text(text, encryption_key):
 def decrypt_text(text, encryption_key):
     cipher_suite = Fernet(encryption_key)
     return cipher_suite.decrypt(text.encode()).decode()
+
+def success_response(message, data=None):
+    response = {
+        'error': False,
+        'message': message
+    }
+    if data:
+        response['data'] = data
+    return jsonify(response), 200
+
+def pagination_response(data, total, limit, page, msg = 'Success'):
+    return jsonify({
+        'data': data,
+        'meta': {
+            'total': total,
+            'limit': limit,
+            'page': page
+        },
+        'error': False,
+        'message': msg
+    }), 200

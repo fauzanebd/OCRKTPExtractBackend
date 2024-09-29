@@ -99,7 +99,8 @@ def login():
             'city': city.name if city else None,
             'subdistrict': subdistrict.name if subdistrict else None,
             'ward': ward.name if ward else None,
-            'village': village.name if village else None
+            'village': village.name if village else None,
+            'no_phone': user.no_phone,
         })
 
     return jsonify({'message': 'Invalid credentials or user not approved'}), 401

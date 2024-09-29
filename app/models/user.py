@@ -76,6 +76,9 @@ class User(db.Model):
         }
         
     def get_hierarchy_value(self):
+        if self.role == 'admin':
+            return 99
+        
         if self.province_code is None:
             return 6
         elif self.city_code is None:

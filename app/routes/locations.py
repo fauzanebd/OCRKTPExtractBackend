@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
 from app.models.locations import Province, City, Subdistrict, Ward, Village
 from app import db
-import jwt
-import os
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import current_app
