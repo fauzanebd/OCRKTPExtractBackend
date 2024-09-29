@@ -50,54 +50,63 @@ def token_required(f):
 # @token_required
 # def signup(current_user):
 def signup():
-    # if current_user.role != 'admin':
-    #     return jsonify({'message': 'Unauthorized'}), 401
-    data = request.get_json()
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({'message': 'Username already exists'}), 400
+    try:
+        if current_user.role != 'admin':
+            return jsonify({'message': 'Unauthorized'}), 401
+        data = request.get_json()
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'message': 'Username already exists'}), 400
 
-    hashed_password = generate_password_hash(data['password'])
-    client_code = os.getenv('CLIENT_CODE')
-    new_user = User(
-        username=data['username'], 
-        password=hashed_password, 
-        role=data.get('role', 'user'), 
-        client_code=client_code,
-        name=data.get('name', ''),
-    )
+        hashed_password = generate_password_hash(data['password'])
+        client_code = os.getenv('CLIENT_CODE')
+        new_user = User(
+            username=data['username'], 
+            password=hashed_password, 
+            role=data.get('role', 'user'), 
+            client_code=client_code,
+            name=data.get('name', ''),
+        )
 
-    db.session.add(new_user)
-    db.session.commit()
+        db.session.add(new_user)
+        db.session.commit()
 
-    return jsonify({'message': 'User registered. You can now login.'}), 201
+        return jsonify({'message': 'User registered. You can now login.'}), 200
+    except Exception as e:
+        current_app.logger.error(str(e))
+        return jsonify({'message': str(e)}), 500
 
 
 @bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    user = User.query.filter_by(username=data['username']).first()
+    try:
+        data = request.get_json()
+        user = User.query.filter_by(username=data['username']).first()
 
-    locations = user.get_user_locations()
-    province = Province.query.filter_by(code=locations['province_code']).first()
-    city = City.query.filter_by(code=locations['city_code']).first()
-    subdistrict = Subdistrict.query.filter_by(code=locations['subdistrict_code']).first()
-    ward = Ward.query.filter_by(code=locations['ward_code']).first()
-    village = Village.query.filter_by(code=locations['village_code']).first()
+        locations = user.get_user_locations()
+        province = Province.query.filter_by(code=locations['province_code']).first()
+        city = City.query.filter_by(code=locations['city_code']).first()
+        subdistrict = Subdistrict.query.filter_by(code=locations['subdistrict_code']).first()
+        ward = Ward.query.filter_by(code=locations['ward_code']).first()
+        village = Village.query.filter_by(code=locations['village_code']).first()
 
-    if user and check_password_hash(user.password, data['password']):
-        token = jwt.encode({
-            'user_id': user.id,
-            'exp': datetime.now() + timedelta(hours=24),
-            'role': user.role
-        }, bp.app_config['JWT_SECRET_KEY'], algorithm="HS256")
-        return jsonify({
-            'user': user.public_fields({
-                'province': province.name if province else None,
-                'city': city.name if city else None,
-                'subdistrict': subdistrict.name if subdistrict else None,
-                'ward': ward.name if ward else None,
-            }),
-            'token': token,
-        })
+        if user and check_password_hash(user.password, data['password']):
+            token = jwt.encode({
+                'user_id': user.id,
+                'exp': datetime.now() + timedelta(hours=24),
+                'role': user.role
+            }, bp.app_config['JWT_SECRET_KEY'], algorithm="HS256")
+            return jsonify({
+                'user': user.public_fields({
+                    'province': province.name if province else None,
+                    'city': city.name if city else None,
+                    'subdistrict': subdistrict.name if subdistrict else None,
+                    'ward': ward.name if ward else None,
+                }),
+                'token': token,
+            })
 
-    return jsonify({'message': 'Invalid credentials or user not approved'}), 401
+        return jsonify({'message': 'Invalid credentials or user not approved'}), 401
+    
+    except Exception as e:
+        current_app.logger.error(str(e))
+        return jsonify({'message': str(e)}), 500
