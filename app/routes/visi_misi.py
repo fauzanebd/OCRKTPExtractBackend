@@ -21,7 +21,7 @@ def visi_misi(current_user):
         if not visi_misi:
             return jsonify({'message': 'Visi Misi not found'}), 404
         
-        return success_response(visi_misi.to_dict())
+        return success_response('Success', visi_misi.to_dict())
     except Exception as e:
         current_app.logger.error(f"Error getting visi misi: {str(e)}")
         return jsonify({'message': 'Error getting visi misi'}), 500
