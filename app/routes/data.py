@@ -31,8 +31,8 @@ def upload_image(current_user):
         data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, current_user.id)
         
         # Generate a unique filename
-        random_string = generate_random_string(12)
-        s3_filename = f"ktp_nik_{data_pemilih.get('nik', 'unknown')}_{random_string}.jpg"
+        random_string = generate_random_string(24)
+        s3_filename = f"{random_string}.png"
         
         # Upload to S3
         if s3_service.s3_service.upload_file(file_data, s3_filename):
