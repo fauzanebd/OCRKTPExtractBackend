@@ -9,6 +9,7 @@ from cryptography.fernet import Fernet
 from app.routes.auth import token_required
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
+from app.utils.helpers import pagination_response
 
 bp = Blueprint('locations', __name__)
 
@@ -28,8 +29,10 @@ def get_provinces(current_user):
         if code:
             query = query.filter(Province.code == code)
         
+        total = query.count()
         provinces = query.limit(limit).offset(offset).all()
-        return jsonify([province.to_dict() for province in provinces]), 200
+        
+        return pagination_response([province.to_dict() for province in provinces], total, limit, page)
     except ValueError as ve:
         current_app.logger.error(f"Invalid parameter: {str(ve)}")
         return jsonify({'message': 'Invalid parameter'}), 400
@@ -56,9 +59,10 @@ def get_cities(current_user):
         cities = cities.filter(City.name.ilike(f"%{q}%"))
     if province_code:
         cities = cities.filter(City.province_code == province_code)
-        
+    
+    total = cities.count()
     cities = cities.limit(limit).offset(offset).all()
-    return jsonify([city.to_dict() for city in cities]), 200
+    return pagination_response([city.to_dict() for city in cities], total, limit, page)
   except ValueError as ve:
     current_app.logger.error(f"Invalid parameter: {str(ve)}")
     return jsonify({'message': 'Invalid parameter'}), 400
@@ -84,9 +88,11 @@ def get_subdistricts(current_user):
         subdistricts = subdistricts.filter(Subdistrict.name.ilike(f"%{q}%"))
     if city_code:
         subdistricts = subdistricts.filter(Subdistrict.city_code == city_code)
-        
+    
+    total = subdistricts.count()
     subdistricts = subdistricts.limit(limit).offset(offset).all()
-    return jsonify([subdistrict.to_dict() for subdistrict in subdistricts]), 200
+    
+    return pagination_response([subdistrict.to_dict() for subdistrict in subdistricts], total, limit, page)
   except ValueError as ve:
     current_app.logger.error(f"Invalid parameter: {str(ve)}")
     return jsonify({'message': 'Invalid parameter'}), 400
@@ -112,9 +118,11 @@ def get_wards(current_user):
         wards = wards.filter(Ward.name.ilike(f"%{q}%"))
     if subdistrict_code:
         wards = wards.filter(Ward.subdistrict_code == subdistrict_code)
-        
+    
+    total = wards.count()
     wards = wards.limit(limit).offset(offset).all()
-    return jsonify([ward.to_dict() for ward in wards]), 200
+    
+    return pagination_response([ward.to_dict() for ward in wards], total, limit, page)
   except ValueError as ve:
     current_app.logger.error(f"Invalid parameter: {str(ve)}")
     return jsonify({'message': 'Invalid parameter'}), 400

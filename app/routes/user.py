@@ -8,6 +8,7 @@ from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from app.routes.auth import token_required
+from app.utils.helpers import pagination_response
 
 bp = Blueprint('user', __name__)
 
@@ -91,10 +92,13 @@ def get_user_subordinate(current_user):
             
         if current_user.role == 'enumerator' or hierarchy == 1:
             return jsonify({'message': 'Unauthorized'}), 401
-            
+        
+        total = query.count()   
         users = query.limit(limit).offset(offset).all()
         
-        return jsonify([user.to_dict() for user in users]), 200
+        data_res = [user.public_field() for user in users]
+        
+        return pagination_response(data_res, total, limit, page)
         
     except Exception as e:
         current_app.logger.error(f"Error getting user's subordinate: {str(e)}")

@@ -91,16 +91,13 @@ def login():
             'role': user.role
         }, bp.app_config['JWT_SECRET_KEY'], algorithm="HS256")
         return jsonify({
-            'user_id': user.id,
+            'user': user.public_fields({
+                'province': province.name if province else None,
+                'city': city.name if city else None,
+                'subdistrict': subdistrict.name if subdistrict else None,
+                'ward': ward.name if ward else None,
+            }),
             'token': token,
-            'role': user.role,
-            'hierarchy': user.get_user_hierarchy(),
-            'province': province.name if province else None,
-            'city': city.name if city else None,
-            'subdistrict': subdistrict.name if subdistrict else None,
-            'ward': ward.name if ward else None,
-            'village': village.name if village else None,
-            'no_phone': user.no_phone,
         })
 
     return jsonify({'message': 'Invalid credentials or user not approved'}), 401
