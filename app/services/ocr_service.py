@@ -46,9 +46,9 @@ class OCRService:
     
     def extract_ktp_data_claude(self, image_data, user_id):
         image_base64 = base64.b64encode(image_data).decode('utf-8')
-        
+        api_key = os.getenv('ANTHROPIC_API_KEY')
         client = anthropic.Anthropic(
-            api_key='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'
+            api_key=api_key,
         )
         message = client.messages.create(
             model="claude-3-haiku-20240307",
