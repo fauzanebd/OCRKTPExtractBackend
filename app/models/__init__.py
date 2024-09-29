@@ -1,7 +1,7 @@
 # Dont change import order``
 
 from .app_setting import AppSetting
-from .locations import Province, Regency, Subdistrict, UrbanVillage, Village
+from .locations import Province, City, Subdistrict, Ward, Village
 
 from .user import User
 from .model import Model

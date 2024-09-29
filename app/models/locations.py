@@ -2,29 +2,34 @@ from app import db
 
 class Province(db.Model):
     __tablename__ = 'provinces'
+    code = db.Column(db.String(2), primary_key=True, unique=True)
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
-class Regency(db.Model):
-    __tablename__ = 'regencies'
+class City(db.Model):
+    __tablename__ = 'cities'
     id = db.Column(db.Integer, primary_key=True)
-    province_id = db.Column(db.Integer, db.ForeignKey('provinces.id'), nullable=False)
+    province_code = db.Column(db.String(2), db.ForeignKey('provinces.code'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(5), nullable=False, unique=True)
 
 class Subdistrict(db.Model):
     __tablename__ = 'subdistricts'
     id = db.Column(db.Integer, primary_key=True)
-    regency_id = db.Column(db.Integer, db.ForeignKey('regencies.id'), nullable=False)
+    city_code = db.Column(db.String(5), db.ForeignKey('cities.code'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(8), nullable=False, unique=True)
 
-class UrbanVillage(db.Model):
-    __tablename__ = 'urban_villages'
+class Ward(db.Model):
+    __tablename__ = 'wards'
     id = db.Column(db.Integer, primary_key=True)
-    subdistrict_id = db.Column(db.Integer, db.ForeignKey('subdistricts.id'), nullable=False)
+    subdistrict_code = db.Column(db.String(8), db.ForeignKey('subdistricts.code'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(13), nullable=False, unique=True)
 
 class Village(db.Model):
     __tablename__ = 'villages'
     id = db.Column(db.Integer, primary_key=True)
-    urban_village_id = db.Column(db.Integer, db.ForeignKey('urban_villages.id'), nullable=False)
+    ward_code = db.Column(db.String(10), db.ForeignKey('wards.code'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(20), nullable=False, unique=True)

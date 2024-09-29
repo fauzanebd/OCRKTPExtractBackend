@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 import io
+import os
 import re, textdistance
 from ultralytics import YOLO
 
@@ -39,7 +40,7 @@ class OCRService:
         img_pil = enhancer.enhance(2)
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-    def extract_ktp_data(self, image_data):
+    def extract_ktp_data(self, image_data, user_id):
         preprocessed_image = self.preprocess_image(image_data)
 
         results = self.model.predict(preprocessed_image, imgsz=(480, 640), iou=0.7, conf=0.5)
@@ -90,7 +91,61 @@ class OCRService:
 
         if 'nik' in data_pemilih:
             data_pemilih['nik'] = re.sub(r'\D', '', data_pemilih['nik'])
+            province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(data_pemilih['nik'])
+            
+            data_pemilih['province_code'] = province_code
+            data_pemilih['city_code'] = city_code
+            data_pemilih['subdistrict_code'] = subdistrict_code
+            
+        change_keys = {
+            'nama': 'name',
+            'alamat': 'address',
+            'rt_rw': 'no_tps',
+            'pekerjaan': 'job',
+            'no_hp': 'no_phone',
+            's3_filename': 's3_file'
+        }
+        
+        for old_key, new_key in change_keys.items():
+            if old_key in data_pemilih:
+                data_pemilih[new_key] = data_pemilih.pop(old_key)
 
-        return data_pemilih
+        client_code = os.getenv('CLIENT_CODE')
+        return {
+            'client_code': client_code,
+            'user_id': user_id,
+            'model_id': 1,
+            'province_code': data_pemilih.get('province_code', None),
+            'city_code': data_pemilih.get('city_code', None),
+            'subdistrict_code': data_pemilih.get('subdistrict_code', None),
+            'ward_code': None,
+            'village_code': None,
+            's3_file': data_pemilih.get('s3_file', ''),
+            'nik': data_pemilih.get('nik', ''),
+            'name': data_pemilih.get('name', ''),
+            'birth_date': data_pemilih.get('tgl_lahir', None),
+            'gender': data_pemilih.get('jk', 'L'),
+            'address': data_pemilih.get('address', ''),
+            'no_phone': data_pemilih.get('no_hp', ''),
+            'no_tps': data_pemilih.get('no_tps', ''),
+            'is_party_member': False,
+            'relation_to_candidate': '',
+            'confirmation_status': '',
+            'category': '',
+            'positioning_to_candidate': '',
+            'expectation_to_candidate': ''
+        }
+    
+    def convert_nik_to_locations(nik):
+        # get 6 first digits of nik
+        nik = str(nik)
+        if len(nik) < 6:
+            return None
+        
+        province_code = nik[:2]
+        city_code =  province_code + '.' + nik[2:4] 
+        subdistrict_code = city_code + '.' + nik[4:6]
+        
+        return province_code, city_code, subdistrict_code
 
 ocr_service = OCRService()

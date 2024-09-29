@@ -14,7 +14,8 @@ bp = Blueprint('data', __name__)
 
 
 @bp.route('/upload', methods=['POST'])
-def upload_image():
+@token_required
+def upload_image(current_user):
     if 'image' not in request.files:
         return jsonify({"error": True, "message": "No file part"}), 400
 
@@ -26,7 +27,7 @@ def upload_image():
         file_data = file.read()
         
         # Extract data using OCR
-        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data)
+        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, current_user.id)
         
         # Generate a unique filename
         random_string = generate_random_string(12)

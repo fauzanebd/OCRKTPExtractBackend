@@ -38,3 +38,6 @@ prune:
 
 # All-in-one command to rebuild and restart
 restart: stop clean build run
+
+migrate:
+	flask db upgrade
