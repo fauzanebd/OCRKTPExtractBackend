@@ -44,8 +44,8 @@ class OCRService:
         img_pil = enhancer.enhance(2)
         return cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     
-    def extract_ktp_data_claude(self, image_data, user_id):
-        ext = os.path.splitext('image.png')[1]
+    def extract_ktp_data_claude(self, image_data, file_name, user_id):
+        ext = file_name.split('.')[-1]
         
         image_type = 'image/png'
         
@@ -93,13 +93,13 @@ class OCRService:
         return data
         
 
-    def extract_ktp_data(self, image_data, user_id):
+    def extract_ktp_data(self, image_data, file_name, user_id):
         preprocessed_image = self.preprocess_image(image_data)
         model = int(os.getenv('MODEL', 1))
         client_code = os.getenv('CLIENT_CODE')
         
         if model == 2:
-            res = self.extract_ktp_data_claude(image_data, user_id)
+            res = self.extract_ktp_data_claude(image_data, file_name, user_id)
             province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(res['nik'])
             
             # insert model used
