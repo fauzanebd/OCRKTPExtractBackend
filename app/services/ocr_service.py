@@ -205,6 +205,12 @@ class OCRService:
             if old_key in data_pemilih:
                 data_pemilih[new_key] = data_pemilih.pop(old_key)
                 
+        if 'jk' in data_pemilih:
+            if data_pemilih['jk'].upper() == 'PEREMPUAN':
+                data_pemilih['jk'] = 'P'
+            else:
+                data_pemilih['jk'] = 'L'
+        
         return {
             'client_code': client_code,
             'user_id': user_id,

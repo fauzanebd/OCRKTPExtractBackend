@@ -30,7 +30,7 @@ def get_provinces(current_user):
             query = query.filter(Province.code == code)
         
         total = query.count()
-        provinces = query.limit(limit).offset(offset).all()
+        provinces = query.order_by(Province.name).limit(limit).offset(offset).all()
         
         return pagination_response([province.to_dict() for province in provinces], total, limit, page)
     except ValueError as ve:
@@ -61,7 +61,7 @@ def get_cities(current_user):
         cities = cities.filter(City.province_code == province_code)
     
     total = cities.count()
-    cities = cities.limit(limit).offset(offset).all()
+    cities = cities.order_by(City.name).limit(limit).offset(offset).all()
     return pagination_response([city.to_dict() for city in cities], total, limit, page)
   except ValueError as ve:
     current_app.logger.error(f"Invalid parameter: {str(ve)}")
@@ -90,7 +90,7 @@ def get_subdistricts(current_user):
         subdistricts = subdistricts.filter(Subdistrict.city_code == city_code)
     
     total = subdistricts.count()
-    subdistricts = subdistricts.limit(limit).offset(offset).all()
+    subdistricts = subdistricts.order_by(Subdistrict.name).limit(limit).offset(offset).all()
     
     return pagination_response([subdistrict.to_dict() for subdistrict in subdistricts], total, limit, page)
   except ValueError as ve:
@@ -120,7 +120,7 @@ def get_wards(current_user):
         wards = wards.filter(Ward.subdistrict_code == subdistrict_code)
     
     total = wards.count()
-    wards = wards.limit(limit).offset(offset).all()
+    wards = wards.order_by(Ward.name).limit(limit).offset(offset).all()
     
     return pagination_response([ward.to_dict() for ward in wards], total, limit, page)
   except ValueError as ve:
