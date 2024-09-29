@@ -8,6 +8,7 @@ from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from app.routes.auth import token_required
+from app.utils.helpers import success_response
 
 bp = Blueprint('visi_misi', __name__)
 
@@ -20,10 +21,7 @@ def visi_misi(current_user):
         if not visi_misi:
             return jsonify({'message': 'Visi Misi not found'}), 404
         
-        return jsonify({
-            'image': visi_misi.image,
-            'text': visi_misi.text
-        }), 200
+        return success_response(visi_misi.to_dict())
     except Exception as e:
         current_app.logger.error(f"Error getting visi misi: {str(e)}")
         return jsonify({'message': 'Error getting visi misi'}), 500
