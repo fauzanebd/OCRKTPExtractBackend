@@ -136,7 +136,7 @@ def get_data_pemilih(current_user):
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.village_code == village_code)
             
-        if current_user.role == 'enumerator' or hierarchy == 1:
+        if current_user.is_enumerator == 'enumerator' or hierarchy == 1:
             query = query.filter(DataPemilih.user_id == current_user.id)
         
         total = query.count()
