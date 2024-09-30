@@ -12,6 +12,7 @@ from app import db
 
 from app.utils.helpers import extract_date
 from app.models.model_used import ModelUsed
+from app.models.app_setting import AppSetting
 
 class OCRService:
     _instance = None
@@ -93,12 +94,13 @@ class OCRService:
         return data
         
 
-    def extract_ktp_data(self, image_data, file_name, user_id):
+    def extract_ktp_data(self, image_data, file_name, user_id, client_code):
         preprocessed_image = self.preprocess_image(image_data)
-        model = int(os.getenv('MODEL', 1))
-        client_code = os.getenv('CLIENT_CODE')
         
-        if model == 2:
+        # where key = model and client_code = client_code
+        model = AppSetting.query.filter_by(key='model', client_code=client_code).first()
+        
+        if model and int(model.value) == 2:
             res = self.extract_ktp_data_claude(image_data, file_name, user_id)
             province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(res['nik'])
             
@@ -106,6 +108,7 @@ class OCRService:
             model_used = ModelUsed(
                 user_id=user_id,
                 model_id=2,
+                client_code=client_code
             )
             
             db.session.add(model_used)
@@ -143,6 +146,7 @@ class OCRService:
         model_used = ModelUsed(
             user_id=user_id,
             model_id=1,
+            client_code=client_code
         )
         
         db.session.add(model_used)

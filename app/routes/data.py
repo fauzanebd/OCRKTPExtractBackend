@@ -27,9 +27,11 @@ def upload_image(current_user):
     try:
         file_data = file.read()
         filename = file.filename
+        # get client_code from query string
+        client_code = request.args.get('client_code')
         
         # Extract data using OCR
-        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, filename, current_user.id)
+        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, filename, current_user.id, client_code)
         
         # Generate a unique filename
         random_string = generate_random_string(24)

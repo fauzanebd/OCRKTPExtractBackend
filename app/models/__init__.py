@@ -12,5 +12,7 @@ from .model_used import ModelUsed
 
 from .data_pemilih import DataPemilih
 
+from .client import Client
+
 
 
