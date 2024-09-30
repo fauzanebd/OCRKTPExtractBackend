@@ -139,7 +139,7 @@ def get_data_pemilih(current_user):
         
         total = query.count()
             
-        entries = query.limit(limit).offset(offset).all()
+        entries = query.order_by(DataPemilih.created_at.desc()).limit(limit).offset(offset).all()
         entry_list = [entry.to_dict() for entry in entries]
         
         return pagination_response(entry_list, total, limit, page)

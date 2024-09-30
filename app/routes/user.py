@@ -96,7 +96,7 @@ def get_user_subordinate(current_user):
         total = query.count()   
         users = query.limit(limit).offset(offset).all()
         
-        data_res = [user.public_field() for user in users]
+        data_res = [user.public_fields() for user in users]
         
         return pagination_response(data_res, total, limit, page)
         
