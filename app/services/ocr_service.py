@@ -50,7 +50,7 @@ class OCRService:
         
         image_type = 'image/png'
         
-        if ext == '.jpg' or ext == '.jpeg':
+        if ext == 'jpg' or ext == 'jpeg':
             image_type = 'image/jpeg'
         
         image_base64 = base64.b64encode(image_data).decode('utf-8')
