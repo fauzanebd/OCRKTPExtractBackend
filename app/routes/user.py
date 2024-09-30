@@ -25,12 +25,11 @@ def create_user(current_user):
         
         hashed_password = generate_password_hash(data['password'])
         # get client_code from .env
-        client_code = os.getenv('CLIENT_CODE')
         new_user = User(
             username=data['username'], 
             password=hashed_password,
             role=data.get('role', 'user'),
-            client_code=data.get(client_code, ''),
+            client_code=data.get('client_code', ''),
             name=data.get('name', ''),
             no_phone=data.get('no_phone', ''),
             nasional=data.get('nasional', False),

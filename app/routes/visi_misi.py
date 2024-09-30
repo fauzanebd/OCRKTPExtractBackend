@@ -16,7 +16,7 @@ bp = Blueprint('visi_misi', __name__)
 @token_required
 def visi_misi(current_user):
     try:
-        client_code = os.getenv('CLIENT_CODE')
+        client_code = request.args.get('client_code')
         visi_misi = VisiMisi.query.filter_by(client_code=client_code).first()
         if not visi_misi:
             return jsonify({'message': 'Visi Misi not found'}), 404
