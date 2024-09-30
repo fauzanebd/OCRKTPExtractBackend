@@ -13,6 +13,7 @@ from app import db
 from app.utils.helpers import extract_date
 from app.models.model_used import ModelUsed
 from app.models.app_setting import AppSetting
+from app.models.locations import Province, City, Subdistrict
 
 class OCRService:
     _instance = None
@@ -104,6 +105,11 @@ class OCRService:
             res = self.extract_ktp_data_claude(image_data, file_name, user_id)
             province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(res['nik'])
             
+            province = Province.query.filter_by(code=province_code).first()
+            city = City.query.filter_by(code=city_code).first()
+            subdistrict = Subdistrict.query.filter_by(code=subdistrict_code).first()
+            
+            
             # insert model used
             model_used = ModelUsed(
                 user_id=user_id,
@@ -120,8 +126,11 @@ class OCRService:
                 'user_id': user_id,
                 'model_id': 1,
                 'province_code': province_code,
+                'province_name': province.name if province else '',
                 'city_code': city_code,
+                'city_name': city.name if city else '',
                 'subdistrict_code': subdistrict_code,
+                'subdistrict_name': subdistrict.name if subdistrict else '',
                 'ward_code': None,
                 'village_code': None,
                 's3_file': '',
@@ -221,14 +230,21 @@ class OCRService:
                 data_pemilih['jk'] = 'P'
             else:
                 data_pemilih['jk'] = 'L'
+                
+        province = Province.query.filter_by(code=province_code).first()
+        city = City.query.filter_by(code=city_code).first()
+        subdistrict = Subdistrict.query.filter_by(code=subdistrict_code).first()
         
         return {
             'client_code': client_code,
             'user_id': user_id,
             'model_id': 1,
             'province_code': data_pemilih.get('province_code', None),
+            'province_name': province.name if province else '',
             'city_code': data_pemilih.get('city_code', None),
+            'city_name': city.name if city else '',
             'subdistrict_code': data_pemilih.get('subdistrict_code', None),
+            'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': None,
             'village_code': None,
             's3_file': data_pemilih.get('s3_file', ''),

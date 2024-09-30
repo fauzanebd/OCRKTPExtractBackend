@@ -1,7 +1,8 @@
 import os
-
+from datetime import datetime
 from app import db
 from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response
+from app.models.locations import Province, City, Subdistrict, Ward, Village 
 
 class DataPemilih(db.Model):
     __tablename__ = 'data_pemilih'
@@ -32,6 +33,10 @@ class DataPemilih(db.Model):
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     
     def to_dict(self):
+        province = Province.query.filter_by(code=self.province_code).first()
+        city = City.query.filter_by(code=self.city_code).first()
+        subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
+        
         fernet_key = os.getenv('FERNET_KEY')
         return {
             'id': self.id,
@@ -39,14 +44,17 @@ class DataPemilih(db.Model):
             'user_id': self.user_id,
             'model_id': self.model_id,
             'province_code': self.province_code,
+            'province_name': province.name if province else '',
             'city_code': self.city_code,
+            'city_name': city.name if city else '',
             'subdistrict_code': self.subdistrict_code,
+            'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': self.ward_code,
             'village_code': self.village_code,
             's3_file': self.s3_file,
             'nik': decrypt_text(self.nik, fernet_key),
             'name': self.name,
-            'birth_date': self.birth_date,
+            'birth_date': self.birth_date.strftime('%d-%m-%Y') if self.birth_date else None,
             'gender': self.gender,
             'address': self.address,
             'no_phone': self.no_phone,

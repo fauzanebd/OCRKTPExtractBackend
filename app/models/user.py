@@ -1,5 +1,6 @@
 from app import db
-from cryptography.fernet import Fernet    
+from cryptography.fernet import Fernet   
+from app.models.locations import Province, City, Subdistrict, Ward, Village 
 
 from app import db
 
@@ -79,6 +80,10 @@ class User(db.Model):
         }
         
     def to_dict(self):
+        province = Province.query.filter_by(code=self.province_code).first()
+        city = City.query.filter_by(code=self.city_code).first()
+        subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
+        
         return {
             'id': self.id,
             'client_code': self.client_code,
@@ -88,8 +93,11 @@ class User(db.Model):
             'no_phone': self.no_phone,
             'nasional': self.nasional,
             'province_code': self.province_code,
+            'province_name': province.name if province else '',
             'city_code': self.city_code,
+            'city_name': city.name if city else '',
             'subdistrict_code': self.subdistrict_code,
+            'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': self.ward_code,
             'village_code': self.village_code,
             'is_enumerator': self.is_enumerator,
