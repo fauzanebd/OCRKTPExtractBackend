@@ -67,8 +67,8 @@ def pagination_response(data, total, limit, page, msg = 'Success'):
         'data': data,
         'meta': {
             'total': total,
-            'limit': limit,
-            'page': page
+            'limit': int(limit),
+            'page': int(page)
         },
         'error': False,
         'message': msg
