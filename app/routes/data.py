@@ -61,7 +61,7 @@ def save_data(current_user):
     logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
     try:
-        client_code = data['client_code']
+        client_code = request.args.get('client_code')
         ktp_data = DataPemilih(
             client_code=client_code,
             user_id=current_user.id,

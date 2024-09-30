@@ -58,7 +58,7 @@ def signup():
             return jsonify({'message': 'Username already exists'}), 400
 
         hashed_password = generate_password_hash(data['password'])
-        client_code = data['client_code']
+        client_code = request.args.get('client_code')
         new_user = User(
             username=data['username'], 
             password=hashed_password, 
