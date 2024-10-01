@@ -95,7 +95,7 @@ def login():
         if user and check_password_hash(user.password, data['password']):
             token = jwt.encode({
                 'user_id': user.id,
-                'exp': datetime.now() + timedelta(hours=24),
+                'exp': datetime.now() + timedelta(days=30),
                 'role': user.role
             }, bp.app_config['JWT_SECRET_KEY'], algorithm="HS256")
             return jsonify({
