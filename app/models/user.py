@@ -64,7 +64,7 @@ class User(db.Model):
             'role': self.role,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'hierarchy_value': self.get_hierarchy_value(),
+            'hierarchy_value': self.get_hierarchy_value().value,
             'hierarchy': self.get_user_hierarchy(),
             'locations': locations
         }
