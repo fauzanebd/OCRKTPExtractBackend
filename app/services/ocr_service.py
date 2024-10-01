@@ -13,7 +13,8 @@ from app import db
 from app.utils.helpers import extract_date
 from app.models.model_used import ModelUsed
 from app.models.app_setting import AppSetting
-from app.models.locations import Province, City, Subdistrict
+from app.models.locations import Province, City, Subdistrict, Ward
+from app.models.user import User
 
 class OCRService:
     _instance = None
@@ -95,20 +96,37 @@ class OCRService:
         return data
         
 
-    def extract_ktp_data(self, image_data, file_name, user_id, client_code):
+    def extract_ktp_data(self, image_data, file_name, user_id, client_code, current_user: User):
         preprocessed_image = self.preprocess_image(image_data)
         
         # where key = model and client_code = client_code
         model = AppSetting.query.filter_by(key='model', client_code=client_code).first()
         
+        
+        locations = current_user.get_user_locations()
+        
+        province = None
+        if locations['province_code']:
+            province = Province.query.filter_by(code=locations['province_code']).first()
+        
+        city = None
+        if locations['city_code']:
+            city = City.query.filter_by(code=locations['city_code']).first()
+            
+        subdistrict = None
+        if locations['subdistrict_code']:
+            subdistrict = Subdistrict.query.filter_by(code=locations['subdistrict_code']).first()
+            
+        ward = None
+        if locations['ward_code']:
+            ward = Ward.query.filter_by(code=locations['ward_code']).first() 
+                        
+        tps_no = None
+        if current_user.tps_no != None:
+            tps_no = current_user.tps_no
+        
         if model and int(model.value) == 2:
             res = self.extract_ktp_data_claude(image_data, file_name, user_id)
-            province_code, city_code, subdistrict_code = OCRService.convert_nik_to_locations(res['nik'])
-            
-            province = Province.query.filter_by(code=province_code).first()
-            city = City.query.filter_by(code=city_code).first()
-            subdistrict = Subdistrict.query.filter_by(code=subdistrict_code).first()
-            
             
             # insert model used
             model_used = ModelUsed(
@@ -125,14 +143,15 @@ class OCRService:
                 'client_code': client_code,
                 'user_id': user_id,
                 'model_id': 1,
-                'province_code': province_code,
+                'province_code': locations['province_code'],
                 'province_name': province.name if province else '',
-                'city_code': city_code,
+                'city_code': locations['city_code'],
                 'city_name': city.name if city else '',
-                'subdistrict_code': subdistrict_code,
+                'subdistrict_code': locations['subdistrict_code'],
                 'subdistrict_name': subdistrict.name if subdistrict else '',
-                'ward_code': None,
-                'village_code': None,
+                'ward_code': locations['ward_code'],
+                'ward_name': ward.name if ward else '',
+                'village_code': locations['village_code'],
                 's3_file': '',
                 'nik': res['nik'],
                 'name': res['name'].title(),
@@ -140,7 +159,7 @@ class OCRService:
                 'gender': res['gender'],
                 'address': res['address'],
                 'no_phone': '',
-                'no_tps': '',
+                'no_tps': tps_no,
                 'is_party_member': False,
                 'relation_to_candidate': '',
                 'confirmation_status': '',
@@ -215,7 +234,6 @@ class OCRService:
         change_keys = {
             'nama': 'name',
             'alamat': 'address',
-            'rt_rw': 'no_tps',
             'pekerjaan': 'job',
             'no_hp': 'no_phone',
             's3_filename': 's3_file'
@@ -231,22 +249,20 @@ class OCRService:
             else:
                 data_pemilih['jk'] = 'L'
                 
-        province = Province.query.filter_by(code=province_code).first()
-        city = City.query.filter_by(code=city_code).first()
-        subdistrict = Subdistrict.query.filter_by(code=subdistrict_code).first()
         
         return {
             'client_code': client_code,
             'user_id': user_id,
             'model_id': 1,
-            'province_code': data_pemilih.get('province_code', None),
+            'province_code': locations['province_code'],
             'province_name': province.name if province else '',
-            'city_code': data_pemilih.get('city_code', None),
+            'city_code': locations['city_code'],
             'city_name': city.name if city else '',
-            'subdistrict_code': data_pemilih.get('subdistrict_code', None),
+            'subdistrict_code': locations['subdistrict_code'],
             'subdistrict_name': subdistrict.name if subdistrict else '',
-            'ward_code': None,
-            'village_code': None,
+            'ward_code': locations['ward_code'],
+            'ward_name': ward.name if ward else '',
+            'village_code': locations['village_code'],
             's3_file': data_pemilih.get('s3_file', ''),
             'nik': data_pemilih.get('nik', ''),
             'name': data_pemilih.get('name', ''),
@@ -254,7 +270,7 @@ class OCRService:
             'gender': data_pemilih.get('jk', 'L'),
             'address': data_pemilih.get('address', ''),
             'no_phone': data_pemilih.get('no_hp', ''),
-            'no_tps': data_pemilih.get('no_tps', ''),
+            'no_tps': tps_no,
             'is_party_member': False,
             'relation_to_candidate': '',
             'confirmation_status': '',

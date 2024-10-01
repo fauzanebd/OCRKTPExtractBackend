@@ -33,7 +33,7 @@ def upload_image(current_user):
         client_code = request.args.get('client_code')
         
         # Extract data using OCR
-        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, filename, current_user.id, client_code)
+        data_pemilih = ocr_service.ocr_service.extract_ktp_data(file_data, filename, current_user.id, client_code, current_user)
         
         # Generate a unique filename
         random_string = generate_random_string(24)
@@ -78,24 +78,23 @@ def check_dpt(current_user):
 def is_save_data_valid(current_user, data: DataPemilih):
     hierarchy = current_user.get_hierarchy_value()
     
-    if hierarchy == Hierarchy.ADMIN or hierarchy == Hierarchy.NASIONAL:
-        return True
-    
-    if hierarchy == Hierarchy.PROVINCE and current_user.province_code == data.province_code:
-        return True
-    
-    if hierarchy == Hierarchy.CITY and current_user.city_code == data.city_code:
-        return True
-    
-    if hierarchy == Hierarchy.SUBDISTRICT and current_user.subdistrict_code == data.subdistrict_code:
+    if hierarchy == Hierarchy.TPS and (current_user.tps_no == data.no_tps and current_user.ward_code == data.ward_code):
         return True
     
     if hierarchy == Hierarchy.WARD and current_user.ward_code == data.ward_code:
         return True
     
-    if hierarchy == Hierarchy.TPS and (current_user.tps_no == data.no_tps and current_user.ward_code == data.ward_code):
+    if hierarchy == Hierarchy.SUBDISTRICT and current_user.subdistrict_code == data.subdistrict_code:
         return True
     
+    if hierarchy == Hierarchy.CITY and current_user.city_code == data.city_code:
+        return True
+    
+    if hierarchy == Hierarchy.PROVINCE and current_user.province_code == data.province_code:
+        return True
+    
+    if hierarchy == Hierarchy.ADMIN or hierarchy == Hierarchy.NASIONAL:
+        return True
     
     return False
     
