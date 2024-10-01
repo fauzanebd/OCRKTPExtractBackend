@@ -60,6 +60,11 @@ def save_data(current_user):
     encrypted_nik = encrypt(data['nik'], enc_key)
     logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
+    if 'birth_date' in data and data['birth_date']:
+        birth_date = datetime.strptime(data['birth_date'], '%d-%m-%Y').strftime('%Y-%m-%d')
+    else:
+        birth_date = None
+    
     try:
         client_code = request.args.get('client_code')
         ktp_data = DataPemilih(
@@ -74,7 +79,7 @@ def save_data(current_user):
             s3_file=data.get('s3_file', ''),
             nik=encrypted_nik,
             name=data.get('name', ''),
-            birth_date=data.get('birth_date', datetime.now().strftime('%Y-%m-%d')),
+            birth_date=birth_date,
             gender=data.get('gender', 'L'),
             address=data.get('address', 'asdasd'),
             no_phone=data.get('no_phone', ''),
@@ -151,6 +156,22 @@ def get_data_pemilih(current_user):
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
     
+@bp.route('/data-pemilih/<int:id>', methods=['DELETE'])
+@token_required
+def delete_data(current_user, id):
+    try:
+        data_pemilih = DataPemilih.query.get(id)
+        if not data_pemilih:
+            return jsonify({"error": True, "message": "Data not found"}), 404
+        
+        db.session.delete(data_pemilih)
+        db.session.commit()
+        
+        return jsonify({"message": "Data deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": True, "message": str(e)}), 500
+    
 @bp.route('/data-pemilih/update_data', methods=['POST'])
 @token_required
 def update_data(current_user):
@@ -165,9 +186,14 @@ def update_data(current_user):
         if data.get('nik'):
             enc_key = os.getenv('ENCRYPTION_KEY').encode('utf-8')
             encrypted_nik = encrypt(data['nik'], enc_key)
+            
+        if 'birth_date' in data and data['birth_date']:
+            birth_date = datetime.strptime(data['birth_date'], '%d-%m-%Y').strftime('%Y-%m-%d')
+        else:
+            birth_date = None
         
         data_pemilih.name = data.get('name', data_pemilih.name)
-        data_pemilih.birth_date = data.get('birth_date', data_pemilih.birth_date)
+        data_pemilih.birth_date = birth_date
         data_pemilih.province_code = data.get('province_code', data_pemilih.province_code)
         data_pemilih.city_code = data.get('city_code', data_pemilih.city_code)
         data_pemilih.subdistrict_code = data.get('subdistrict_code', data_pemilih.subdistrict_code)
