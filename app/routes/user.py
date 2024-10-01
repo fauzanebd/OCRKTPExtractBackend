@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.models.user import User
+from app.models.user import User, Hierarchy
 from app import db
 import os
 from datetime import datetime, timedelta
@@ -70,27 +70,27 @@ def get_user_subordinate(current_user):
         if q:
             query = query.filter(User.name.ilike(f"%{q}%"))
         if province_code:
-            if hierarchy > 6 and current_user.province_code != province_code:
+            if hierarchy > Hierarchy.NASIONAL and current_user.province_code != province_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.province_code == province_code)
         if city_code:
-            if hierarchy > 5 and current_user.city_code != city_code:
+            if hierarchy > Hierarchy.PROVINCE and current_user.city_code != city_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.city_code == city_code)
         if subdistrict_code:
-            if hierarchy > 4 and current_user.subdistrict_code != subdistrict_code:
+            if hierarchy > Hierarchy.CITY and current_user.subdistrict_code != subdistrict_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.subdistrict_code == subdistrict_code)
         if ward_code:
-            if hierarchy > 3 and current_user.ward_code != ward_code:
+            if hierarchy > Hierarchy.SUBDISTRICT and current_user.ward_code != ward_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.ward_code == ward_code)
         if village_code:
-            if hierarchy > 2 and current_user.village_code != village_code:
+            if hierarchy > Hierarchy.WARD and current_user.village_code != village_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(User.village_code == village_code)
             
-        if current_user.role == 'enumerator' or hierarchy == 1:
+        if hierarchy == Hierarchy.ENUMERATOR or hierarchy == Hierarchy.VILLAGE:
             return jsonify({'message': 'Unauthorized'}), 401
         
         total = query.count()   

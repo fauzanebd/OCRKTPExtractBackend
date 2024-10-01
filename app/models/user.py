@@ -3,6 +3,18 @@ from cryptography.fernet import Fernet
 from app.models.locations import Province, City, Subdistrict, Ward, Village 
 
 from app import db
+from enum import Enum
+
+class Hierarchy(Enum):
+    ADMIN = 99
+    NASIONAL = 6
+    PROVINCE = 5
+    CITY = 4
+    SUBDISTRICT = 3
+    WARD = 2
+    VILLAGE = 1
+    TPS = 0
+    ENUMERATOR = -1
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -108,18 +120,21 @@ class User(db.Model):
         }
         
     def get_hierarchy_value(self):
+        if self.is_enumerator:
+            return Hierarchy.ENUMERATOR
+        
         if self.role == 'admin':
-            return 99
+            return Hierarchy.ADMIN
         
         if self.province_code is None:
-            return 6
+            return Hierarchy.NASIONAL
         elif self.city_code is None:
-            return 5
+            return Hierarchy.PROVINCE
         elif self.subdistrict_code is None:
-            return 4
+            return Hierarchy.CITY
         elif self.ward_code is None:
-            return 3
-        elif self.village_code is None:
-            return 2
+            return Hierarchy.SUBDISTRICT
+        elif self.tps_no is None:
+            return Hierarchy.WARD
         else:
-            return 1
+            return Hierarchy.TPS

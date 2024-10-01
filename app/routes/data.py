@@ -3,6 +3,7 @@ import logging
 from flask import Blueprint, request, jsonify
 from app.models.data_pemilih import DataPemilih
 from app.models.dpt import DPT
+from app.models.user import Hierarchy
 from app import db
 import os
 from datetime import datetime
@@ -74,6 +75,30 @@ def check_dpt(current_user):
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 5001
 
+def is_save_data_valid(current_user, data: DataPemilih):
+    hierarchy = current_user.get_hierarchy_value()
+    
+    if hierarchy == Hierarchy.ADMIN or hierarchy == Hierarchy.NASIONAL:
+        return True
+    
+    if hierarchy == Hierarchy.PROVINCE and current_user.province_code == data.province_code:
+        return True
+    
+    if hierarchy == Hierarchy.CITY and current_user.city_code == data.city_code:
+        return True
+    
+    if hierarchy == Hierarchy.SUBDISTRICT and current_user.subdistrict_code == data.subdistrict_code:
+        return True
+    
+    if hierarchy == Hierarchy.WARD and current_user.ward_code == data.ward_code:
+        return True
+    
+    if hierarchy == Hierarchy.TPS and (current_user.tps_no == data.no_tps and current_user.ward_code == data.ward_code):
+        return True
+    
+    
+    return False
+    
 @bp.route('/data-pemilih/save_data', methods=['POST'])
 @token_required
 def save_data(current_user):
@@ -122,6 +147,9 @@ def save_data(current_user):
             dpt_id=data.get('dpt_id', None),
             is_verified=data.get('is_verified', False)
         )
+        
+        if not is_save_data_valid(current_user, ktp_data):
+            return jsonify({"error": True, "message": "Unauthorized"}), 401
 
         db.session.add(ktp_data)
         db.session.commit()
@@ -153,6 +181,7 @@ def get_data_pemilih(current_user):
         subdistrict_code = request.args.get('subdistrict_code')
         ward_code = request.args.get('ward_code')
         village_code = request.args.get('village_code')
+        no_tps = request.args.get('no_tps')
         
         hierarchy = current_user.get_hierarchy_value()
         query = DataPemilih.query
@@ -160,27 +189,31 @@ def get_data_pemilih(current_user):
         if q:
             query = query.filter(DataPemilih.name.ilike(f"%{q}%"))
         if province_code:
-            if hierarchy > 6 and current_user.province_code != province_code:
+            if hierarchy <= Hierarchy.PROVINCE.value and current_user.province_code != province_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.province_code == province_code)
         if city_code:
-            if hierarchy > 5 and current_user.city_code != city_code:
+            if hierarchy <= Hierarchy.CITY.value and current_user.city_code != city_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.city_code == city_code)
         if subdistrict_code:
-            if hierarchy > 4 and current_user.subdistrict_code != subdistrict_code:
+            if hierarchy <= Hierarchy.SUBDISTRICT.value and current_user.subdistrict_code != subdistrict_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.subdistrict_code == subdistrict_code)
         if ward_code:
-            if hierarchy > 3 and current_user.ward_code != ward_code:
+            if hierarchy <= Hierarchy.WARD.value and current_user.ward_code != ward_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.ward_code == ward_code)
         if village_code:
-            if hierarchy > 2 and current_user.village_code != village_code:
+            if hierarchy <= Hierarchy.VILLAGE.value and current_user.village_code != village_code:
                 return jsonify({'message': 'Unauthorized'}), 401
             query = query.filter(DataPemilih.village_code == village_code)
             
-        if current_user.is_enumerator or hierarchy == 1:
+        if no_tps:
+            if hierarchy <= Hierarchy.TPS.value and current_user.tps_no != no_tps:
+                return jsonify({'message': 'Unauthorized'}), 401
+            
+        if hierarchy == Hierarchy.ENUMERATOR:
             query = query.filter(DataPemilih.user_id == current_user.id)
         
         total = query.count()
@@ -199,6 +232,9 @@ def delete_data(current_user, id):
         data_pemilih = DataPemilih.query.get(id)
         if not data_pemilih:
             return jsonify({"error": True, "message": "Data not found"}), 404
+        
+        if not is_save_data_valid(current_user, data_pemilih):
+            return jsonify({"error": True, "message": "Unauthorized"}), 401
         
         db.session.delete(data_pemilih)
         db.session.commit()
@@ -248,6 +284,9 @@ def update_data(current_user):
         data_pemilih.expectation_to_candidate = data.get('expectation_to_candidate', data_pemilih.expectation_to_candidate)
         data_pemilih.dpt_id = data.get('dpt_id', data_pemilih.dpt_id)
         data_pemilih.is_verified = data.get('is_verified', data_pemilih.is_verified)
+        
+        if not is_save_data_valid(current_user, data_pemilih):
+            return jsonify({"error": True, "message": "Unauthorized"}), 401
         
         db.session.commit()
         
