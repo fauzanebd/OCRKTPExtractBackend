@@ -31,6 +31,7 @@ class DPT(db.Model):
       'province_name': province.name if province else '',
       'city_code': self.city_code,
       'city_name': city.name if city else '',
+      'gender': self.gender,
       'subdistrict_code': self.subdistrict_code,
       'subdistrict_name': subdistrict.name if subdistrict else '',
       'ward_code': self.ward_code,

@@ -2,6 +2,7 @@
 import logging
 from flask import Blueprint, request, jsonify
 from app.models.data_pemilih import DataPemilih
+from app.models.dpt import DPT
 from app import db
 import os
 from datetime import datetime
@@ -51,6 +52,28 @@ def upload_image(current_user):
     except Exception as e:
         return jsonify({"error": True, "message": str(e)}), 500
 
+@bp.route('/data-pemilih/check_dpt', methods=['POST'])
+@token_required
+def check_dpt(current_user):
+    data = request.get_json()
+    
+    try:
+        ward_code = data.get('ward_code', None)
+        name = data.get('name', '').upper()
+        gender = data.get('gender')
+        
+        dpts = []
+        if ward_code is not None:
+            dpts = DPT.query.filter_by(ward_code=ward_code, name=name, gender=gender).all()
+        
+        return jsonify({
+            "message": "Success", 
+            "potential_dpt": [dpt.to_dict() for dpt in dpts],
+            "is_valid_dpt": len(dpts) == 1
+        }), 200
+    except Exception as e:
+        return jsonify({"error": True, "message": str(e)}), 5001
+
 @bp.route('/data-pemilih/save_data', methods=['POST'])
 @token_required
 def save_data(current_user):
@@ -64,6 +87,12 @@ def save_data(current_user):
         birth_date = datetime.strptime(data['birth_date'], '%d-%m-%Y').strftime('%Y-%m-%d')
     else:
         birth_date = None
+        
+    ward_code = data.get('ward_code', None)
+    name = data.get('name', '').upper()
+    dpts = []
+    if ward_code is not None:
+        dpts = DataPemilih.query.filter_by(ward_code=ward_code, name=name).all()
     
     try:
         client_code = request.args.get('client_code')
@@ -78,7 +107,7 @@ def save_data(current_user):
             village_code=data.get('village_code', None),
             s3_file=data.get('s3_file', ''),
             nik=encrypted_nik,
-            name=data.get('name', ''),
+            name=name,
             birth_date=birth_date,
             gender=data.get('gender', 'L'),
             address=data.get('address', 'asdasd'),
@@ -95,7 +124,12 @@ def save_data(current_user):
         db.session.add(ktp_data)
         db.session.commit()
 
-        return jsonify({"message": "Data saved successfully", "id": ktp_data.id}), 200
+        return jsonify({
+            "message": "Data saved successfully", 
+            "id": ktp_data.id,
+            "potential_dpt": [dpt.to_dict() for dpt in dpts],
+            "is_valid_dpt": len(dpts) == 0
+        }), 200
     except Exception as e:
         db.session.rollback()
         # handle unique constraint violation
