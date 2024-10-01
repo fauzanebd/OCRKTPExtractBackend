@@ -59,6 +59,13 @@ class S3Service:
         except S3Error as e:
             current_app.logger.error(f"Error deleting file from S3: {str(e)}")
             return False
+        
+    def get_presigned_url(self, object_name):
+        try:
+            return self.client.presigned_get_object(self.bucket_name, object_name)
+        except S3Error as e:
+            current_app.logger.error(f"Error getting presigned url: {str(e)}")
+            return None
 
 
 s3_service = S3Service()

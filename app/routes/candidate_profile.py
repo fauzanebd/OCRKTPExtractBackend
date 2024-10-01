@@ -1,12 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.models.candidate_profile import CandidateProfile
 from app import db
-import os
-from datetime import datetime, timedelta
-from functools import wraps
 from flask import current_app
-from werkzeug.security import generate_password_hash, check_password_hash
-from cryptography.fernet import Fernet
 from app.routes.auth import token_required
 from app.utils.helpers import success_response
 
