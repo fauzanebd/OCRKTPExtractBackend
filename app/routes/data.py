@@ -78,7 +78,7 @@ def check_dpt(current_user):
 def is_save_data_valid(current_user, data: DataPemilih):
     hierarchy = current_user.get_hierarchy_value()
     
-    if hierarchy == Hierarchy.TPS and (current_user.tps_no == data.no_tps and current_user.ward_code == data.ward_code):
+    if (hierarchy == Hierarchy.TPS or hierarchy == Hierarchy.ENUMERATOR) and (current_user.tps_no == data.no_tps and current_user.ward_code == data.ward_code):
         return True
     
     if hierarchy == Hierarchy.WARD and current_user.ward_code == data.ward_code:
