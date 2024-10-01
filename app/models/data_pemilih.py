@@ -32,6 +32,7 @@ class DataPemilih(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     dpt_id = db.Column(db.Integer, db.ForeignKey('dpts.id'), nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)
     
     def to_dict(self):
         province = Province.query.filter_by(code=self.province_code).first()

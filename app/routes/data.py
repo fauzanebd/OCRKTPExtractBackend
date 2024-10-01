@@ -119,7 +119,8 @@ def save_data(current_user):
             category=data.get('category', ''),
             positioning_to_candidate=data.get('positioning_to_candidate', ''),
             expectation_to_candidate=data.get('expectation_to_candidate', ''),
-            dpt_id=data.get('dpt_id', None)
+            dpt_id=data.get('dpt_id', None),
+            is_verified=data.get('is_verified', False)
         )
 
         db.session.add(ktp_data)
@@ -245,6 +246,8 @@ def update_data(current_user):
         data_pemilih.category = data.get('category', data_pemilih.category)
         data_pemilih.positioning_to_candidate = data.get('positioning_to_candidate', data_pemilih.positioning_to_candidate)
         data_pemilih.expectation_to_candidate = data.get('expectation_to_candidate', data_pemilih.expectation_to_candidate)
+        data_pemilih.dpt_id = data.get('dpt_id', data_pemilih.dpt_id)
+        data_pemilih.is_verified = data.get('is_verified', data_pemilih.is_verified)
         
         db.session.commit()
         
