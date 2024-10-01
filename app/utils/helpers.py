@@ -4,7 +4,11 @@ import string
 import random
 import re
 import datetime
+import os
 from cryptography.fernet import Fernet
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+import base64
 
 def generate_random_string(length):
     characters = string.ascii_letters + string.digits
@@ -52,6 +56,33 @@ def encrypt_text(text, encryption_key):
 def decrypt_text(text, encryption_key):
     cipher_suite = Fernet(encryption_key)
     return cipher_suite.decrypt(text.encode()).decode()
+
+# Key must be 16, 24, or 32 bytes long
+def encrypt(plaintext, key):
+    # Create AES cipher in ECB mode
+    cipher = AES.new(key, AES.MODE_ECB)
+    
+    # Pad the plaintext to be a multiple of 16 bytes
+    padded_plaintext = pad(plaintext.encode('utf-8'), AES.block_size)
+    
+    # Encrypt the plaintext
+    ciphertext = cipher.encrypt(padded_plaintext)
+    
+    # Return base64-encoded ciphertext
+    return base64.b64encode(ciphertext).decode('utf-8')
+
+def decrypt(ciphertext, key):
+    # Create AES cipher in ECB mode
+    cipher = AES.new(key, AES.MODE_ECB)
+    
+    # Decode base64 ciphertext
+    decoded_ciphertext = base64.b64decode(ciphertext)
+    
+    # Decrypt and unpad the plaintext
+    decrypted_plaintext = unpad(cipher.decrypt(decoded_ciphertext), AES.block_size)
+    
+    return decrypted_plaintext.decode('utf-8')
+
 
 def success_response(message, data=None):
     response = {

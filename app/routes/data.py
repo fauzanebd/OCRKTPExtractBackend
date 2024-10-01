@@ -6,7 +6,7 @@ from app import db
 import os
 from datetime import datetime
 from app.services import ocr_service, s3_service
-from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response, success_response
+from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response, success_response, encrypt
 from app.routes.auth import token_required
 from datetime import datetime, timedelta
 from functools import wraps
@@ -56,8 +56,8 @@ def upload_image(current_user):
 def save_data(current_user):
     data = request.get_json()
 
-    fernet_key = os.getenv('FERNET_KEY')
-    encrypted_nik = encrypt_text(data['nik'], fernet_key)
+    enc_key = os.getenv('ENCRYPTION_KEY').encode('utf-8')
+    encrypted_nik = encrypt(data['nik'], enc_key)
     logging.debug(f"Stored encrypted NIK (first 10 chars): {encrypted_nik[:10]}...")
     
     try:
@@ -160,8 +160,8 @@ def update_data(current_user):
         
         encrypted_nik = data_pemilih.nik
         if data.get('nik'):
-            fernet_key = os.getenv('FERNET_KEY')
-            encrypted_nik = encrypt_text(data['nik'], fernet_key)
+            enc_key = os.getenv('ENCRYPTION_KEY').encode('utf-8')
+            encrypted_nik = encrypt(data['nik'], enc_key)
         
         data_pemilih.name = data.get('name', data_pemilih.name)
         data_pemilih.birth_date = data.get('birth_date', data_pemilih.birth_date)

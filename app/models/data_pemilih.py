@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from app import db
-from app.utils.helpers import generate_random_string, encrypt_text, decrypt_text, pagination_response
+from app.utils.helpers import decrypt
 from app.models.locations import Province, City, Subdistrict, Ward, Village 
 
 class DataPemilih(db.Model):
@@ -37,7 +37,8 @@ class DataPemilih(db.Model):
         city = City.query.filter_by(code=self.city_code).first()
         subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
         
-        fernet_key = os.getenv('FERNET_KEY')
+        enc_key = os.getenv('ENCRYPTION_KEY').encode('utf-8')
+    
         return {
             'id': self.id,
             'client_code': self.client_code,
@@ -52,7 +53,7 @@ class DataPemilih(db.Model):
             'ward_code': self.ward_code,
             'village_code': self.village_code,
             's3_file': self.s3_file,
-            'nik': decrypt_text(self.nik, fernet_key),
+            'nik': decrypt(self.nik, enc_key),
             'name': self.name,
             'birth_date': self.birth_date.strftime('%d-%m-%Y') if self.birth_date else None,
             'gender': self.gender,
