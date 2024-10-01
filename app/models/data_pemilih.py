@@ -14,7 +14,7 @@ class DataPemilih(db.Model):
     city_code = db.Column(db.String(5), db.ForeignKey('cities.code'), nullable=False)
     subdistrict_code = db.Column(db.String(8), db.ForeignKey('subdistricts.code'), nullable=False)
     ward_code = db.Column(db.String(13), db.ForeignKey('wards.code'), nullable=True)
-    village_code = db.Column(db.String(20), db.ForeignKey('villages.code'), nullable=True)
+    village_code = db.Column(db.String(100), nullable=True)
     s3_file = db.Column(db.String(255), nullable=False)
     nik = db.Column(db.String(255), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
