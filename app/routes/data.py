@@ -92,6 +92,9 @@ def save_data(current_user):
 
         return jsonify({"message": "Data saved successfully", "id": ktp_data.id}), 200
     except Exception as e:
+        # handle unique constraint violation
+        if 'unique constraint' in str(e):
+            return jsonify({"error": True, "message": "NIK already exists"}), 400
         db.session.rollback()
         return jsonify({"error": True, "message": str(e)}), 500
     
