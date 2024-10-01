@@ -23,6 +23,7 @@ class User(db.Model):
     role = db.Column(db.String(20), default='user')
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+    tps_no = db.Column(db.Integer, nullable=True)
     # fernet_key = db.Column(db.LargeBinary, nullable=True) 
 
     # def generate_fernet_key(self):

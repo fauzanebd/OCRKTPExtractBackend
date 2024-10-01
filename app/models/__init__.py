@@ -16,5 +16,7 @@ from .client import Client
 
 from .dpt import DPT
 
+from .candidate_profile import CandidateProfile
+
 
 

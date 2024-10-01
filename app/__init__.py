@@ -15,7 +15,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.routes import auth, data, helper, user, locations, visi_misi, dpt
+    from app.routes import auth, data, helper, user, locations, visi_misi, dpt, candidate_profile
     app.register_blueprint(helper.bp)
 
     app.register_blueprint(auth.bp)
@@ -35,5 +35,8 @@ def create_app(config_class=Config):
     
     app.register_blueprint(dpt.bp)
     dpt.bp.app_config = app.config
+    
+    app.register_blueprint(candidate_profile.bp)
+    candidate_profile.bp.app_config = app.config
 
     return app
