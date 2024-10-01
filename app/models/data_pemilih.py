@@ -74,5 +74,6 @@ class DataPemilih(db.Model):
             'expectation_to_candidate': self.expectation_to_candidate,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'dpt_id': self.dpt_id
+            'dpt_id': self.dpt_id,
+            'is_verified': self.is_verified
         }
