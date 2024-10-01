@@ -14,4 +14,4 @@ Flask-Migrate==4.0.7
 psycopg2-binary==2.9.9
 cryptography==43.0.1
 anthropic==0.34.2
-pycryptodome==3.21.0
+pycryptodome==3.12.0
