@@ -14,5 +14,7 @@ from .data_pemilih import DataPemilih
 
 from .client import Client
 
+from .dpt import DPT
+
 
 
