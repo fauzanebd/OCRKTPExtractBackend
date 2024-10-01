@@ -37,6 +37,9 @@ class DataPemilih(db.Model):
         province = Province.query.filter_by(code=self.province_code).first()
         city = City.query.filter_by(code=self.city_code).first()
         subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
+        ward = None
+        if self.ward_code:
+            ward = Ward.query.filter_by(code=self.ward_code).first()
         
         enc_key = os.getenv('ENCRYPTION_KEY').encode('utf-8')
     
@@ -52,6 +55,7 @@ class DataPemilih(db.Model):
             'subdistrict_code': self.subdistrict_code,
             'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': self.ward_code,
+            'ward_name': ward.name if ward else '',
             'village_code': self.village_code,
             's3_file': self.s3_file,
             'nik': decrypt(self.nik, enc_key),
