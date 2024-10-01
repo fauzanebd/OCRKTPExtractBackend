@@ -118,7 +118,8 @@ def save_data(current_user):
             confirmation_status=data.get('confirmation_status', ''),
             category=data.get('category', ''),
             positioning_to_candidate=data.get('positioning_to_candidate', ''),
-            expectation_to_candidate=data.get('expectation_to_candidate', '')
+            expectation_to_candidate=data.get('expectation_to_candidate', ''),
+            dpt_id=data.get('dpt_id', None)
         )
 
         db.session.add(ktp_data)

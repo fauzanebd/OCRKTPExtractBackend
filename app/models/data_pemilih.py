@@ -31,6 +31,7 @@ class DataPemilih(db.Model):
     expectation_to_candidate = db.Column(db.Text)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
+    dpt_id = db.Column(db.Integer, db.ForeignKey('dpts.id'), nullable=True)
     
     def to_dict(self):
         province = Province.query.filter_by(code=self.province_code).first()
@@ -67,5 +68,6 @@ class DataPemilih(db.Model):
             'positioning_to_candidate': self.positioning_to_candidate,
             'expectation_to_candidate': self.expectation_to_candidate,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
+            'updated_at': self.updated_at,
+            'dpt_id': self.dpt_id
         }
