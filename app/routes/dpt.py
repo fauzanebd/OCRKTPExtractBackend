@@ -66,6 +66,7 @@ def get_dpt(current_user):
         total = query.count()
         
         dpts = query.limit(limit).offset(offset).all()
+        dpts = [dpt.to_dict() for dpt in dpts]
         
         return pagination_response(dpts, total, limit, page)
     except Exception as e:
