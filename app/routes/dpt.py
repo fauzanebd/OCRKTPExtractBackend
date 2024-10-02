@@ -34,7 +34,7 @@ def get_dpt(current_user):
            query = query.filter(DPT.name.ilike(f"%{q}%"))
            
         if current_user.is_enumerator:
-          locations = current_user.get_user_location()
+          locations = current_user.get_user_locations()
           query = query.filter(DPT.ward_code == locations['ward_code'])
         else:
           if province_code:
