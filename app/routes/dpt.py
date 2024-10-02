@@ -8,7 +8,7 @@ from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 from app.routes.auth import token_required
-from app.utils.helpers import success_response
+from app.utils.helpers import success_response, pagination_response
 from app.models.dpt import DPT
 
 bp = Blueprint('dpt', __name__)
@@ -63,9 +63,11 @@ def get_dpt(current_user):
             else:
               return jsonify({'message': 'Unauthorized'}), 401
             
+        total = query.count()
+        
         dpts = query.limit(limit).offset(offset).all()
         
-        return success_response('Success', [dpt.to_dict() for dpt in dpts])
+        return pagination_response(dpts, total, limit, page)
     except Exception as e:
         current_app.logger.error(f"Error getting dpt: {str(e)}")
         return jsonify({'message': 'Error getting dpt'}), 500
