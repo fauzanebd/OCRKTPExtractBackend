@@ -1,6 +1,7 @@
 from app import db
 from cryptography.fernet import Fernet   
 from app.models.locations import Province, City, Subdistrict, Ward, Village 
+from app.models.client import Client
 
 from app import db
 from enum import Enum
@@ -36,20 +37,13 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     tps_no = db.Column(db.Integer, nullable=True)
-    # fernet_key = db.Column(db.LargeBinary, nullable=True) 
-
-    # def generate_fernet_key(self):
-    #     key = Fernet.generate_key()
-    #     self.fernet_key = key
-    #     return key
-
-    # def get_fernet_key(self):
-    #     return self.fernet_ke
     
     def public_fields(self, locations=None):
+        client = Client.query.filter_by(code=self.client_code).first()
         return {
             'id': self.id,
             'client_code': self.client_code,
+            'client_name': client.name if client else '',
             'avatar': self.avatar,
             'name': self.name,
             'username': self.username,
