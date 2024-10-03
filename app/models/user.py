@@ -43,7 +43,7 @@ class User(db.Model):
         city = City.query.filter_by(code=self.city_code).first()
         subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
         ward = Ward.query.filter_by(code=self.ward_code).first()
-        client = Client.query.filter_by(code=self.client_code).first()
+        client = Client.query.filter_by(client_code=self.client_code).first()
         
         return {
             'id': self.id,
@@ -101,7 +101,7 @@ class User(db.Model):
         city = City.query.filter_by(code=self.city_code).first()
         subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
         ward = Ward.query.filter_by(code=self.ward_code).first()
-        client = Client.query.filter_by(code=self.client_code).first()
+        client = Client.query.filter_by(client_code=self.client_code).first()
         
         return {
             'id': self.id,
