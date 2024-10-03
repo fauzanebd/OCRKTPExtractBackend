@@ -39,7 +39,12 @@ class User(db.Model):
     tps_no = db.Column(db.Integer, nullable=True)
     
     def public_fields(self, locations=None):
+        province = Province.query.filter_by(code=self.province_code).first()
+        city = City.query.filter_by(code=self.city_code).first()
+        subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
+        ward = Ward.query.filter_by(code=self.ward_code).first()
         client = Client.query.filter_by(code=self.client_code).first()
+        
         return {
             'id': self.id,
             'client_code': self.client_code,
@@ -50,9 +55,13 @@ class User(db.Model):
             'no_phone': self.no_phone,
             'nasional': self.nasional,
             'province_code': self.province_code,
+            'province_name': province.name if province else '',
             'city_code': self.city_code,
+            'city_name': city.name if city else '',
             'subdistrict_code': self.subdistrict_code,
+            'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': self.ward_code,
+            'ward_name': ward.name if ward else '',
             'village_code': self.village_code,
             'is_enumerator': self.is_enumerator,
             'role': self.role,
@@ -60,7 +69,8 @@ class User(db.Model):
             'updated_at': self.updated_at,
             'hierarchy_value': self.get_hierarchy_value().value,
             'hierarchy': self.get_user_hierarchy(),
-            'locations': locations
+            'locations': locations,
+            'tps_no': self.tps_no
         }
     
     def get_user_hierarchy(self):
@@ -90,10 +100,13 @@ class User(db.Model):
         province = Province.query.filter_by(code=self.province_code).first()
         city = City.query.filter_by(code=self.city_code).first()
         subdistrict = Subdistrict.query.filter_by(code=self.subdistrict_code).first()
+        ward = Ward.query.filter_by(code=self.ward_code).first()
+        client = Client.query.filter_by(code=self.client_code).first()
         
         return {
             'id': self.id,
             'client_code': self.client_code,
+            'client_name': client.name if client else '',
             'avatar': self.avatar,
             'name': self.name,
             'username': self.username,
@@ -106,11 +119,13 @@ class User(db.Model):
             'subdistrict_code': self.subdistrict_code,
             'subdistrict_name': subdistrict.name if subdistrict else '',
             'ward_code': self.ward_code,
+            'ward_name': ward.name if ward else '',
             'village_code': self.village_code,
             'is_enumerator': self.is_enumerator,
             'role': self.role,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
+            'updated_at': self.updated_at,
+            'tps_no': self.tps_no
         }
         
     def get_hierarchy_value(self):
